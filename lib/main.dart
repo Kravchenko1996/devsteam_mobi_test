@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import 'pages/HomePage.dart';
-import 'view_models/photos.dart';
 
 void main() {
   initApp();
@@ -10,14 +8,7 @@ void main() {
 
 void initApp() {
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider<PhotosView>(
-          create: (_) => PhotosView(),
-        ),
-      ],
-      child: MyApp(),
-    ),
+    MyApp(),
   );
 }
 
