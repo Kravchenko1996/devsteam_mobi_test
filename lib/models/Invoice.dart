@@ -1,26 +1,24 @@
-import 'package:devsteam_mobi_test/models/Client.dart';
-import 'package:devsteam_mobi_test/models/Item.dart';
-
 class Invoice {
+  int id;
+  int clientId;
   final String name;
-  final Client client;
-  final Item item;
+  static final columns = ["id", "client_id", "name"];
 
   Invoice({
+    this.id,
+    this.clientId,
     this.name,
-    this.client,
-    this.item,
   });
 
   factory Invoice.fromMap(Map<String, dynamic> json) => Invoice(
+        id: json['id'],
+        clientId: json['client_id'],
         name: json['name'],
-        client: json['client'],
-        item: json['item'],
       );
 
   Map<String, dynamic> toMap() => {
+        'id': id,
+        'client_id': clientId,
         'name': name,
-        'client': client,
-        'item': item,
       };
 }

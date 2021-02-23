@@ -1,47 +1,64 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 
-class ClientForm extends StatelessWidget {
+class ClientForm extends StatefulWidget {
   final TextEditingController clientName;
   final TextEditingController clientEmail;
+  final VoidCallback onSave;
 
   const ClientForm({
     Key key,
     this.clientName,
     this.clientEmail,
+    this.onSave,
   }) : super(key: key);
 
+  @override
+  _ClientFormState createState() => _ClientFormState();
+}
+
+class _ClientFormState extends State<ClientForm> {
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Container(
-          child: FormBuilderTextField(
+          child: TextFormField(
             autofocus: true,
-            name: 'clientName',
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: 'Enter client name',
             ),
-            controller: clientName,
+            controller: widget.clientName,
+            validator: (val) {
+              if (val.isEmpty) {
+                return 'Enter something please!';
+              }
+              return null;
+            },
           ),
         ),
         Container(
-          child: FormBuilderTextField(
+          child: TextFormField(
             autofocus: true,
-            name: 'clientEmail',
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: 'Enter client email',
             ),
-            controller: clientEmail,
+            controller: widget.clientEmail,
+            validator: (val) {
+              if (val.isEmpty) {
+                return 'Enter something please!';
+              }
+              return null;
+            },
           ),
         ),
         RaisedButton(
-            child: Text('Save'),
-            onPressed: () async {
-              // await DBProvider.db.newInvoice(newInvoice)
-            }),
+          child: Text('Save'),
+          onPressed: () {
+            widget.onSave();
+          },
+        ),
       ],
     );
   }

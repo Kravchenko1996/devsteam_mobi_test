@@ -5,11 +5,13 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 class ClientWidget extends StatelessWidget {
   final TextEditingController clientName;
   final TextEditingController clientEmail;
+  final VoidCallback onSave;
 
   const ClientWidget({
     Key key,
     this.clientName,
     this.clientEmail,
+    this.onSave,
   }) : super(key: key);
 
   @override
@@ -20,7 +22,11 @@ class ClientWidget extends StatelessWidget {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                content: ClientForm(),
+                content: ClientForm(
+                  clientName: clientName,
+                  clientEmail: clientEmail,
+                  onSave: onSave,
+                ),
               );
             });
       },
@@ -33,7 +39,7 @@ class ClientWidget extends StatelessWidget {
               size: 30,
             ),
             Text(
-              'Client',
+              clientName.text.isEmpty ? 'Client' : clientName.text,
               style: TextStyle(
                 color: Colors.grey,
               ),
