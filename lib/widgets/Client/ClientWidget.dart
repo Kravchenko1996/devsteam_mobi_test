@@ -1,25 +1,27 @@
 import 'package:devsteam_mobi_test/Database.dart';
 import 'package:devsteam_mobi_test/models/Client.dart';
-import 'package:devsteam_mobi_test/widgets/ClientForm.dart';
+import 'package:devsteam_mobi_test/widgets/Client/ClientForm.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class ClientWidget extends StatefulWidget {
+  final GlobalKey clientFormKey;
   final TextEditingController clientName;
   final TextEditingController clientEmail;
   final VoidCallback onSave;
   final VoidCallback onRemove;
-  final GlobalKey clientFormKey;
   final int clientId;
+  final void Function(Client) onChoose;
 
   const ClientWidget({
     Key key,
+    this.clientFormKey,
     this.clientName,
     this.clientEmail,
     this.onSave,
-    this.clientFormKey,
     this.clientId,
     this.onRemove,
+    this.onChoose,
   }) : super(key: key);
 
   @override
@@ -27,7 +29,7 @@ class ClientWidget extends StatefulWidget {
 }
 
 class _ClientWidgetState extends State<ClientWidget> {
-  Client client;
+  Client _client;
 
   @override
   void initState() {
@@ -37,10 +39,10 @@ class _ClientWidgetState extends State<ClientWidget> {
 
   void _getClientById(int clientId) async {
     if (widget.clientId != null) {
-      client = await DBProvider.db.getClientById(clientId);
+      _client = await DBProvider.db.getClientById(clientId);
       setState(() {
-        widget.clientName.text = client.name;
-        widget.clientEmail.text = client.email;
+        widget.clientName.text = _client.name;
+        widget.clientEmail.text = _client.email;
       });
     }
   }
@@ -59,7 +61,8 @@ class _ClientWidgetState extends State<ClientWidget> {
                   onSave: widget.onSave,
                   onRemove: widget.onRemove,
                   clientFormKey: widget.clientFormKey,
-                  client: client,
+                  client: _client,
+                  onChoose: widget.onChoose,
                 ),
               );
             });
@@ -73,7 +76,7 @@ class _ClientWidgetState extends State<ClientWidget> {
               size: 30,
             ),
             Text(
-              widget.clientName.text.isEmpty && client == null
+              widget.clientName.text.isEmpty && _client == null
                   ? 'Client'
                   : widget.clientName.text,
               style: TextStyle(

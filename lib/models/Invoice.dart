@@ -1,5 +1,3 @@
-
-
 class Invoice {
   int id;
   int clientId;

@@ -2,7 +2,7 @@ import 'package:devsteam_mobi_test/Database.dart';
 import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/widgets/CenterLoadingIndicator.dart';
 import 'package:devsteam_mobi_test/widgets/FABWidget.dart';
-import 'package:devsteam_mobi_test/widgets/NewInvoiceScreen.dart';
+import 'package:devsteam_mobi_test/widgets/InvoiceScreen.dart';
 import 'package:flutter/material.dart';
 
 class InvoicesPage extends StatefulWidget {
@@ -21,7 +21,7 @@ class _InvoicesPageState extends State<InvoicesPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FABWidget(
         label: 'Create invoice',
-        route: NewInvoiceScreen(),
+        route: InvoiceScreen(),
       ),
       body: FutureBuilder(
         future: _getAllInvoices(),
@@ -40,8 +40,7 @@ class _InvoicesPageState extends State<InvoicesPage> {
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => NewInvoiceScreen(
-                              clientId: projectSnap.data[index].clientId,
+                            builder: (context) => InvoiceScreen(
                               invoice: projectSnap.data[index],
                             ),
                           ),
@@ -50,7 +49,6 @@ class _InvoicesPageState extends State<InvoicesPage> {
                       child: Container(
                         child: Column(
                           children: [
-                            _buildClientInfo(projectSnap.data[index].clientId),
                             Center(
                               child: Text(
                                 '${projectSnap.data[index].name}',
@@ -60,6 +58,7 @@ class _InvoicesPageState extends State<InvoicesPage> {
                                 ),
                               ),
                             ),
+                            _buildClientInfo(projectSnap.data[index].clientId),
                           ],
                         ),
                       ),
@@ -75,11 +74,11 @@ class _InvoicesPageState extends State<InvoicesPage> {
     return await DBProvider.db.getClientById(clientId);
   }
 
-  Widget _buildClientInfo(clientId) {
+  Widget _buildClientInfo(int clientId) {
     return Center(
       child: FutureBuilder(
         future: _getClientById(clientId),
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        builder: (BuildContext context, AsyncSnapshot<Client> snapshot) {
           return snapshot.data == null
               ? Text('')
               : Text('${snapshot.data.name}');

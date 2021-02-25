@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:devsteam_mobi_test/models/Client.dart';
+import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -34,48 +35,25 @@ class DBProvider {
           CREATE TABLE Invoices (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL UNIQUE,
-            client_id INTEGER NOT NULL,
+            client_id INTEGER,
             FOREIGN KEY (client_id) REFERENCES Clients (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION    
+      )""");
+      await db.execute("""
+          CREATE TABLE Items (
+            id INTEGER PRIMARY KEY,
+            title TEXT NOT NULL,
+            price INTEGER NOT NULL,
+            quantity INTEGER NOT NULL,
+            amount INTEGER NOT NULL,
+            invoice_id INTEGER,
+            FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
+              ON DELETE NO ACTION ON UPDATE NO ACTION     
       )""");
     });
   }
 
-  Future<Invoice> upsertInvoice(
-    Invoice invoice,
-    Invoice selectedInvoice,
-  ) async {
-    final db = await database;
-    if (selectedInvoice == null) {
-      invoice.id = await db.insert("invoices", invoice.toMap());
-    } else {
-      invoice.id = selectedInvoice.id;
-      await db.update(
-        "Invoices",
-        invoice.toMap(),
-        where: "id = ?",
-        whereArgs: [selectedInvoice.id],
-      );
-    }
-    return invoice;
-  }
-
-  // Future<Invoice> removeClientFromInvoice(
-  //   Invoice invoice,
-  //   Invoice selectedInvoice,
-  // ) async {
-  //   final db = await database;
-  //   invoice.id = selectedInvoice.id;
-  //   print(invoice.toMap());
-  //   var res = await db.update(
-  //     "Invoices",
-  //     invoice.toMap(),
-  //     where: "client_id = ?",
-  //     whereArgs: [invoice.clientId],
-  //   );
-  //   print(invoice.clientId);
-  //   return invoice;
-  // }
+  //CLIENTS
 
   Future<Client> upsertClient(
     Client client,
@@ -108,6 +86,41 @@ class DBProvider {
     return client;
   }
 
+  getAllClients() async {
+    final db = await database;
+    var res = await db.query("Clients");
+    List<Client> clients =
+        res.isNotEmpty ? res.map((e) => Client.fromMap(e)).toList() : [];
+    return clients;
+  }
+
+  getClientById(int id) async {
+    final db = await database;
+    var res = await db.query("Clients", where: "id = ?", whereArgs: [id]);
+    return res.isNotEmpty ? Client.fromMap(res.first) : null;
+  }
+
+  //INVOICES
+
+  Future<Invoice> upsertInvoice(
+    Invoice invoice,
+    Invoice selectedInvoice,
+  ) async {
+    final db = await database;
+    if (selectedInvoice == null) {
+      invoice.id = await db.insert("invoices", invoice.toMap());
+    } else {
+      invoice.id = selectedInvoice.id;
+      await db.update(
+        "Invoices",
+        invoice.toMap(),
+        where: "id = ?",
+        whereArgs: [selectedInvoice.id],
+      );
+    }
+    return invoice;
+  }
+
   Future<Invoice> fetchInvoice(int id) async {
     final db = await database;
     List<Map> res = await db.query(
@@ -120,27 +133,6 @@ class DBProvider {
     return invoice;
   }
 
-  // Future<Invoice> fetchInvoiceAndClient(int invoiceId) async {
-  //   final db = await database;
-  //   List<Map> res = await db.query(
-  //     "Invoices",
-  //     columns: Invoice.columns,
-  //     where: "id = ?",
-  //     whereArgs: [invoiceId],
-  //   );
-  //   Invoice invoice = Invoice.fromMap(res[0]);
-  //   invoice.client = await fetchClient(invoice.clientId);
-  //   return invoice;
-  // }
-
-  getAllClients() async {
-    final db = await database;
-    var res = await db.query("Clients");
-    List<Client> clients =
-        res.isNotEmpty ? res.map((e) => Client.fromMap(e)).toList() : [];
-    return clients;
-  }
-
   getAllInvoices() async {
     final db = await database;
     var res = await db.query("Invoices");
@@ -149,21 +141,49 @@ class DBProvider {
     return invoices;
   }
 
-  getClientById(int id) async {
+// ITEMS
+
+  Future<Item> upsertItem(Item item) async {
     final db = await database;
-    var res = await db.query("Clients", where: "id = ?", whereArgs: [id]);
-    return res.isNotEmpty ? Client.fromMap(res.first) : null;
+    if (item != null) {
+      item.id = await db.insert("items", item.toMap());
+    } else {
+      // item.id = selecteditem.id;
+      await db.update(
+        "items",
+        item.toMap(),
+        where: "id = ?",
+        // whereArgs: [selecteditem.id],
+      );
+    }
+    return item;
   }
 
-// getInvoiceById(int id) async {
-//   final db = await database;
-//   var res = await db.query("Invoices", where: "id = ?", whereArgs: [id]);
-//   return res.isNotEmpty ? Invoice.fromMap(res.first) : null;
-// }
-//
-
-  deleteClientById(int id) async {
+  getAllItems() async {
     final db = await database;
-    db.delete("Clients", where: "id = ?", whereArgs: [id]);
+    var res = await db.query("Items");
+    List<Item> items =
+        res.isNotEmpty ? res.map((e) => Item.fromMap(e)).toList() : [];
+    return items;
+  }
+
+  getAllItemsByInvoiceId(int invoiceId) async {
+    final db = await database;
+    var res = await db.query(
+      "Items",
+      where: "invoice_id = ?",
+      whereArgs: [invoiceId],
+    );
+    return res.isNotEmpty ? res.map((e) => Item.fromMap(e)).toList() : null;
+  }
+
+  getItemById(int id) async {
+    final db = await database;
+    var res = await db.query(
+      "Items",
+      where: "id = ?",
+      whereArgs: [id],
+    );
+    return res.isNotEmpty ? Item.fromMap(res.first) : null;
   }
 }

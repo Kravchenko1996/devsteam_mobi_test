@@ -1,14 +1,15 @@
 import 'package:devsteam_mobi_test/models/Client.dart';
-import 'package:devsteam_mobi_test/widgets/AllClientsScreen.dart';
+import 'package:devsteam_mobi_test/widgets/Client/AllClientsScreen.dart';
 import 'package:flutter/material.dart';
 
-class ClientForm extends StatefulWidget {
+class ClientForm extends StatelessWidget {
+  final GlobalKey clientFormKey;
   final TextEditingController clientName;
   final TextEditingController clientEmail;
   final VoidCallback onSave;
   final VoidCallback onRemove;
-  final GlobalKey clientFormKey;
   final Client client;
+  final void Function(Client) onChoose;
 
   const ClientForm({
     Key key,
@@ -18,24 +19,13 @@ class ClientForm extends StatefulWidget {
     this.onRemove,
     this.clientFormKey,
     this.client,
+    this.onChoose,
   }) : super(key: key);
-
-  @override
-  _ClientFormState createState() => _ClientFormState();
-}
-
-class _ClientFormState extends State<ClientForm> {
-  void chooseClientFromList(Client client) {
-    setState(() {
-      widget.clientName.text = client.name;
-      widget.clientEmail.text = client.email;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Form(
-      key: widget.clientFormKey,
+      key: clientFormKey,
       child: Column(
         children: [
           Row(
@@ -45,7 +35,7 @@ class _ClientFormState extends State<ClientForm> {
               RaisedButton(
                 child: Text('Save'),
                 onPressed: () {
-                  widget.onSave();
+                  onSave();
                 },
               ),
             ],
@@ -57,7 +47,7 @@ class _ClientFormState extends State<ClientForm> {
                 border: InputBorder.none,
                 hintText: 'Enter client name',
               ),
-              controller: widget.clientName,
+              controller: clientName,
               validator: (val) {
                 if (val.isEmpty) {
                   return 'Enter something please!';
@@ -73,7 +63,7 @@ class _ClientFormState extends State<ClientForm> {
                 border: InputBorder.none,
                 hintText: 'Enter client email',
               ),
-              controller: widget.clientEmail,
+              controller: clientEmail,
               validator: (val) {
                 if (val.isEmpty) {
                   return 'Enter something please!';
@@ -87,7 +77,7 @@ class _ClientFormState extends State<ClientForm> {
             children: [
               RaisedButton(
                 onPressed: () {
-                  widget.onRemove();
+                  // onRemove();
                 },
                 child: Text('Delete'),
               ),
@@ -97,7 +87,7 @@ class _ClientFormState extends State<ClientForm> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => AllClientsScreen(
-                        onChoose: chooseClientFromList,
+                        onChoose: onChoose,
                       ),
                     ),
                   );
