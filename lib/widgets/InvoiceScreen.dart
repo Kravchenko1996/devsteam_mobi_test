@@ -37,9 +37,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   Invoice newInvoice = Invoice();
   Item newItem = Item();
 
-  int invoiceClientId;
+  int selectedClientId;
   List<Item> itemsOfInvoice = [];
   int total = 0;
+  Item selectedItem;
 
   @override
   void initState() {
@@ -51,19 +52,17 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
   void _getAllItemsByInvoiceId(int invoiceId) async {
     var res = await DBProvider.db.getAllItemsByInvoiceId(invoiceId);
-    setState(() {
-      itemsOfInvoice = res;
-      res.forEach((Item element) {
-        print(element.amount);
-        total = total + element.amount;
+    if (res != null) {
+      setState(() {
+        itemsOfInvoice = res;
+        countTotalOfInvoice();
       });
-    });
-    print(total);
+    }
   }
 
   void _chooseClientFromList(Client selectedClient) {
     setState(() {
-      invoiceClientId = selectedClient.id;
+      selectedClientId = selectedClient.id;
       _clientNameController.text = selectedClient.name;
       _clientEmailController.text = selectedClient.email;
     });
@@ -77,10 +76,13 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       );
       await DBProvider.db.upsertClient(
         newClient,
-        invoiceClientId == null && widget.invoice != null
+        selectedClientId == null && widget.invoice != null
             ? widget.invoice.clientId
-            : invoiceClientId,
+            : selectedClientId,
       );
+      setState(() {
+        _clientNameController.text = _clientNameController.text;
+      });
       Navigator.of(context).pop();
     }
   }
@@ -89,31 +91,117 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     if (_invoiceFormKey.currentState.validate()) {
       newInvoice = Invoice(
         name: _invoiceNameController.text,
-        clientId: invoiceClientId == null && widget.invoice != null
+        total: total,
+        clientId: selectedClientId == null && widget.invoice != null
             ? widget.invoice.clientId
             : newClient.id,
       );
-      await DBProvider.db.upsertInvoice(newInvoice,
-          widget.invoice != null ? widget.invoice : invoiceClientId);
+      await DBProvider.db.upsertInvoice(
+        widget.invoice == null ? newInvoice : widget.invoice,
+        selectedClientId == null && widget.invoice == null
+            ? newClient.id
+            : selectedClientId != null
+                ? selectedClientId
+                : widget.invoice.clientId,
+      );
+      await DBProvider.db.getAllInvoices();
+      if (itemsOfInvoice != null) {
+        itemsOfInvoice.forEach(
+          (Item item) async {
+            if (item.invoiceId == null) {
+              await DBProvider.db.upsertItem(
+                Item(
+                  title: item.title,
+                  price: item.price,
+                  quantity: item.quantity,
+                  amount: item.amount,
+                  invoiceId: widget.invoice != null
+                      ? widget.invoice.id
+                      : newInvoice.id,
+                ),
+              );
+            }
+          },
+        );
+      }
     }
   }
 
-  void _saveItem() async {
+  void _addItemToList() {
+    _itemFormKey.currentState.reset();
     if (_itemFormKey.currentState.validate()) {
       int itemPrice = int.parse(_itemPriceController.text);
       int itemQuantity = int.parse(_itemQuantityController.text);
-      newItem = Item(
-        title: _itemTitleController.text,
-        price: itemPrice,
-        quantity: itemQuantity,
-        amount: itemPrice * itemQuantity,
-        invoiceId: widget.invoice != null ? widget.invoice.id : newInvoice.id,
-      );
-      await DBProvider.db.upsertItem(newItem);
-      _getAllItemsByInvoiceId(
-          widget.invoice != null ? widget.invoice.id : newInvoice.id);
-      Navigator.of(context).pop();
+      setState(() {
+        Item newItem = Item(
+          title: _itemTitleController.text,
+          price: itemPrice,
+          quantity: itemQuantity,
+          amount: itemPrice * itemQuantity,
+          invoiceId: null,
+        );
+        itemsOfInvoice.add(newItem);
+        total += newItem.amount;
+      });
     }
+    // ToDo reset form after selecting item to edit;
+    _itemFormKey.currentState.reset();
+    Navigator.of(context).pop();
+  }
+
+  void countTotalOfInvoice() {
+    if (itemsOfInvoice != null) {
+      itemsOfInvoice.forEach((Item element) {
+        total += element.amount;
+      });
+    }
+  }
+
+  void _chooseItemFromList(Item onTapItem) {
+    setState(() {
+      selectedItem = onTapItem;
+    });
+    _editSelectedItem();
+  }
+
+  void _editSelectedItem() {
+    setState(() {
+      _itemTitleController.text = selectedItem.title;
+      _itemPriceController.text = selectedItem.price.toString();
+      _itemQuantityController.text = selectedItem.quantity.toString();
+    });
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: ItemForm(
+              itemFormKey: _itemFormKey,
+              itemTitle: _itemTitleController,
+              itemPrice: _itemPriceController,
+              itemQuantity: _itemQuantityController,
+              onSave: _changeItemInList,
+            ),
+          );
+        });
+  }
+
+  void _changeItemInList() {
+    int index = itemsOfInvoice.indexOf(selectedItem);
+    int itemPrice = int.parse(_itemPriceController.text);
+    int itemQuantity = int.parse(_itemQuantityController.text);
+    Item editedItem = Item(
+      title: _itemTitleController.text,
+      price: itemPrice,
+      quantity: itemQuantity,
+      amount: itemPrice * itemQuantity,
+    );
+    setState(() {
+      itemsOfInvoice[index] = editedItem;
+      total -= selectedItem.amount;
+      total += editedItem.amount;
+    });
+    _itemFormKey.currentState.reset();
+    Navigator.of(context).pop();
   }
 
   @override
@@ -156,7 +244,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   onChoose: _chooseClientFromList,
                   clientId: widget.invoice != null
                       ? widget.invoice.clientId
-                      : invoiceClientId,
+                      : selectedClientId,
                 ),
                 _buildItems(
                     widget.invoice != null ? widget.invoice.id : newInvoice.id),
@@ -165,7 +253,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   itemTitle: _itemTitleController,
                   itemPrice: _itemPriceController,
                   itemQuantity: _itemQuantityController,
-                  onSave: _saveItem,
+                  onSave: _addItemToList,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -174,7 +262,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       'Total',
                     ),
                     Text(
-                        total.toString()
+                      total.toString(),
                     ),
                   ],
                 ),
@@ -188,52 +276,41 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
   Widget _buildItems(int invoiceId) {
     return Container(
-      child: itemsOfInvoice.length == 0
+      child: itemsOfInvoice == null
           ? Container()
           : ListView.builder(
-        physics: NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        itemCount: itemsOfInvoice.length,
-        itemBuilder: (BuildContext context, int index) {
-          return GestureDetector(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(itemsOfInvoice[index].title),
-                    Row(
-                      children: [
-                        Text(
-                            '${itemsOfInvoice[index].quantity.toString()}'
-                                ' x ₴${itemsOfInvoice[index].price.toString()}')
-                      ],
-                    ),
-                  ],
-                ),
-                Text('₴${itemsOfInvoice[index].amount.toString()}'),
-              ],
+              physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: itemsOfInvoice.length,
+              itemBuilder: (BuildContext context, int index) {
+                return GestureDetector(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(itemsOfInvoice[index].title),
+                          Row(
+                            children: [
+                              Text(
+                                  '${itemsOfInvoice[index].quantity.toString()}'
+                                  ' x ₴${itemsOfInvoice[index].price.toString()}')
+                            ],
+                          ),
+                        ],
+                      ),
+                      Text('₴${itemsOfInvoice[index].amount.toString()}'),
+                    ],
+                  ),
+                  onTap: () {
+                    _chooseItemFromList(
+                      itemsOfInvoice[index],
+                    );
+                  },
+                );
+              },
             ),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    content: ItemForm(
-                      itemFormKey: _itemFormKey,
-                      itemTitle: _itemTitleController,
-                      itemPrice: _itemPriceController,
-                      itemQuantity: _itemQuantityController,
-                      onSave: _saveItem,
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
     );
   }
 }

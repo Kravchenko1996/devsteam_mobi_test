@@ -35,6 +35,7 @@ class DBProvider {
           CREATE TABLE Invoices (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL UNIQUE,
+            total INTEGER,
             client_id INTEGER,
             FOREIGN KEY (client_id) REFERENCES Clients (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION    
@@ -104,18 +105,21 @@ class DBProvider {
 
   Future<Invoice> upsertInvoice(
     Invoice invoice,
-    Invoice selectedInvoice,
+    int clientId,
   ) async {
+    print('UPSERT INVOICE');
+    print(invoice.toMap());
+    print(clientId);
     final db = await database;
-    if (selectedInvoice == null) {
+    if (invoice.id == null) {
       invoice.id = await db.insert("invoices", invoice.toMap());
     } else {
-      invoice.id = selectedInvoice.id;
+      invoice.clientId = clientId;
       await db.update(
         "Invoices",
         invoice.toMap(),
         where: "id = ?",
-        whereArgs: [selectedInvoice.id],
+        whereArgs: [invoice.id],
       );
     }
     return invoice;
@@ -145,15 +149,14 @@ class DBProvider {
 
   Future<Item> upsertItem(Item item) async {
     final db = await database;
-    if (item != null) {
+    if (item.id == null) {
       item.id = await db.insert("items", item.toMap());
     } else {
-      // item.id = selecteditem.id;
       await db.update(
         "items",
         item.toMap(),
         where: "id = ?",
-        // whereArgs: [selecteditem.id],
+        whereArgs: [item.id],
       );
     }
     return item;
