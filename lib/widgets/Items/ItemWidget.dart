@@ -29,6 +29,10 @@ class _ItemWidgetState extends State<ItemWidget> {
   Widget build(BuildContext context) {
     return RaisedButton(
       onPressed: () {
+        // Reset controllers to add new Item after editing old ones;
+        widget.itemTitle.text = '';
+        widget.itemPrice.text = '';
+        widget.itemQuantity.text = '';
         showDialog(
             context: context,
             builder: (BuildContext context) {

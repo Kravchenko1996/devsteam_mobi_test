@@ -3,6 +3,7 @@ import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/models/Invoice.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ClientWidget.dart';
+import 'package:devsteam_mobi_test/widgets/Discount/DiscountWidget.dart';
 import 'package:devsteam_mobi_test/widgets/InvoiceNameWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Items/ItemForm.dart';
 import 'package:devsteam_mobi_test/widgets/Items/ItemWidget.dart';
@@ -25,6 +26,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   final _invoiceFormKey = GlobalKey<FormState>();
   final _clientFormKey = GlobalKey<FormState>();
   final _itemFormKey = GlobalKey<FormState>();
+  final _discountFormKey = GlobalKey<FormState>();
 
   final TextEditingController _invoiceNameController = TextEditingController();
   final TextEditingController _clientNameController = TextEditingController();
@@ -32,6 +34,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   final TextEditingController _itemTitleController = TextEditingController();
   final TextEditingController _itemPriceController = TextEditingController();
   final TextEditingController _itemQuantityController = TextEditingController();
+  final TextEditingController _discountController = TextEditingController();
 
   Client newClient = Client();
   Invoice newInvoice = Invoice();
@@ -39,23 +42,40 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
   int selectedClientId;
   List<Item> itemsOfInvoice = [];
-  int total = 0;
+  double subTotal = 0.0;
   Item selectedItem;
+  double discount = 0.0;
+  double difference = 0.0;
+  double total = 0.0;
 
   @override
   void initState() {
     super.initState();
     if (widget.invoice != null) {
-      _getAllItemsByInvoiceId(widget.invoice.id);
+      _getAllItemsByInvoiceId();
+      _getInvoiceInfo();
     }
   }
 
-  void _getAllItemsByInvoiceId(int invoiceId) async {
-    var res = await DBProvider.db.getAllItemsByInvoiceId(invoiceId);
+  void _getAllItemsByInvoiceId() async {
+    var res = await DBProvider.db.getAllItemsByInvoiceId(widget.invoice.id);
     if (res != null) {
       setState(() {
         itemsOfInvoice = res;
-        countTotalOfInvoice();
+        _countSubtotalOfInvoice();
+        countTotal();
+      });
+    }
+  }
+
+  void _getInvoiceInfo() async {
+    var res = await DBProvider.db.fetchInvoice(widget.invoice.id);
+    if (res != null) {
+      setState(() {
+        discount = res.discount != null ? res.discount : 0;
+        total = res.total;
+        _discountController.text = res.discount.toString();
+        difference = subTotal - total;
       });
     }
   }
@@ -87,24 +107,39 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     }
   }
 
+  void _removeClientFromInvoice() async {
+    await DBProvider.db.removeClientFromInvoice(widget.invoice.id);
+    setState(() {
+      _clientNameController.text = '';
+      _clientEmailController.text = '';
+    });
+    Navigator.of(context).pop();
+  }
+
+  int _getClientId() {
+    var res = _clientNameController.text.isEmpty
+        ? null
+        : selectedClientId != null
+            ? selectedClientId
+            : newClient.id != null
+                ? newClient.id
+                : widget.invoice.clientId;
+    return res;
+  }
+
   void _saveInvoice() async {
     if (_invoiceFormKey.currentState.validate()) {
       newInvoice = Invoice(
         name: _invoiceNameController.text,
         total: total,
-        clientId: selectedClientId == null && widget.invoice != null
-            ? widget.invoice.clientId
-            : newClient.id,
+        clientId: _getClientId(),
       );
       await DBProvider.db.upsertInvoice(
         widget.invoice == null ? newInvoice : widget.invoice,
-        selectedClientId == null && widget.invoice == null
-            ? newClient.id
-            : selectedClientId != null
-                ? selectedClientId
-                : widget.invoice.clientId,
+        _getClientId(),
+        discount,
+        total,
       );
-      await DBProvider.db.getAllInvoices();
       if (itemsOfInvoice != null) {
         itemsOfInvoice.forEach(
           (Item item) async {
@@ -125,34 +160,33 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         );
       }
     }
+    await DBProvider.db.getAllInvoices();
   }
 
   void _addItemToList() {
-    _itemFormKey.currentState.reset();
     if (_itemFormKey.currentState.validate()) {
       int itemPrice = int.parse(_itemPriceController.text);
       int itemQuantity = int.parse(_itemQuantityController.text);
+      Item newItem = Item(
+        title: _itemTitleController.text,
+        price: itemPrice,
+        quantity: itemQuantity,
+        amount: itemPrice * itemQuantity,
+        invoiceId: null,
+      );
       setState(() {
-        Item newItem = Item(
-          title: _itemTitleController.text,
-          price: itemPrice,
-          quantity: itemQuantity,
-          amount: itemPrice * itemQuantity,
-          invoiceId: null,
-        );
         itemsOfInvoice.add(newItem);
+        subTotal += newItem.amount;
         total += newItem.amount;
       });
     }
-    // ToDo reset form after selecting item to edit;
-    _itemFormKey.currentState.reset();
     Navigator.of(context).pop();
   }
 
-  void countTotalOfInvoice() {
+  void _countSubtotalOfInvoice() {
     if (itemsOfInvoice != null) {
       itemsOfInvoice.forEach((Item element) {
-        total += element.amount;
+        subTotal += element.amount;
       });
     }
   }
@@ -197,11 +231,30 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     );
     setState(() {
       itemsOfInvoice[index] = editedItem;
-      total -= selectedItem.amount;
-      total += editedItem.amount;
+      subTotal -= selectedItem.amount;
+      subTotal += editedItem.amount;
     });
     _itemFormKey.currentState.reset();
     Navigator.of(context).pop();
+  }
+
+  void _deleteItem(int itemId) async {
+    await DBProvider.db.deleteItem(itemId);
+  }
+
+  void _saveDiscount() {
+    setState(() {
+      discount = double.parse(_discountController.text);
+      difference = subTotal * discount / 100;
+      countTotal();
+    });
+    Navigator.of(context).pop();
+  }
+
+  void countTotal() {
+    setState(() {
+      total = subTotal - difference;
+    });
   }
 
   @override
@@ -242,6 +295,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   clientEmail: _clientEmailController,
                   onSave: _saveClient,
                   onChoose: _chooseClientFromList,
+                  onRemove: _removeClientFromInvoice,
                   clientId: widget.invoice != null
                       ? widget.invoice.clientId
                       : selectedClientId,
@@ -259,13 +313,32 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Total',
+                      'Subtotal',
                     ),
                     Text(
-                      total.toString(),
+                      subTotal.toString(),
                     ),
                   ],
                 ),
+                DiscountWidget(
+                  discountFormKey: _discountFormKey,
+                  invoiceDiscount: _discountController,
+                  onSave: _saveDiscount,
+                  discount: discount,
+                  invoice: widget.invoice != null ? widget.invoice : null,
+                  difference: difference,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total',
+                    ),
+                    Text(
+                      total.toStringAsFixed(2),
+                    ),
+                  ],
+                )
               ],
             ),
           ),
@@ -283,31 +356,56 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               shrinkWrap: true,
               itemCount: itemsOfInvoice.length,
               itemBuilder: (BuildContext context, int index) {
-                return GestureDetector(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(itemsOfInvoice[index].title),
-                          Row(
-                            children: [
-                              Text(
-                                  '${itemsOfInvoice[index].quantity.toString()}'
-                                  ' x ₴${itemsOfInvoice[index].price.toString()}')
-                            ],
-                          ),
-                        ],
+                final Item currentItem = itemsOfInvoice[index];
+                return Dismissible(
+                  key: UniqueKey(),
+                  onDismissed: (direction) {
+                    setState(() {
+                      itemsOfInvoice.removeAt(index);
+                      _deleteItem(currentItem.id);
+                      subTotal -= currentItem.amount;
+                      total -= currentItem.amount;
+                    });
+                    Scaffold.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${currentItem.title} dismissed'),
                       ),
-                      Text('₴${itemsOfInvoice[index].amount.toString()}'),
-                    ],
-                  ),
-                  onTap: () {
-                    _chooseItemFromList(
-                      itemsOfInvoice[index],
                     );
                   },
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    color: Colors.redAccent,
+                    child: Icon(
+                      Icons.delete,
+                      size: 24,
+                      color: Colors.white,
+                    ),
+                  ),
+                  child: GestureDetector(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(currentItem.title),
+                            Row(
+                              children: [
+                                Text('${currentItem.quantity.toString()}'
+                                    ' x ₴${currentItem.price.toString()}')
+                              ],
+                            ),
+                          ],
+                        ),
+                        Text('₴${currentItem.amount.toString()}'),
+                      ],
+                    ),
+                    onTap: () {
+                      _chooseItemFromList(
+                        currentItem,
+                      );
+                    },
+                  ),
                 );
               },
             ),

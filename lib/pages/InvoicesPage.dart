@@ -87,7 +87,9 @@ class _InvoicesPageState extends State<InvoicesPage> {
   }
 
   Future<Client> _getClientById(int clientId) async {
-    return await DBProvider.db.getClientById(clientId);
+    return clientId != null
+        ? await DBProvider.db.getClientById(clientId)
+        : null;
   }
 
   Widget _buildClientInfo(int clientId) {

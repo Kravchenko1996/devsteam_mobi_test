@@ -35,7 +35,8 @@ class DBProvider {
           CREATE TABLE Invoices (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL UNIQUE,
-            total INTEGER,
+            total REAL,
+            discount REAL,
             client_id INTEGER,
             FOREIGN KEY (client_id) REFERENCES Clients (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION    
@@ -101,20 +102,16 @@ class DBProvider {
     return res.isNotEmpty ? Client.fromMap(res.first) : null;
   }
 
-  //INVOICES
-
-  Future<Invoice> upsertInvoice(
-    Invoice invoice,
-    int clientId,
-  ) async {
-    print('UPSERT INVOICE');
-    print(invoice.toMap());
-    print(clientId);
+  removeClientFromInvoice(int id) async {
     final db = await database;
-    if (invoice.id == null) {
-      invoice.id = await db.insert("invoices", invoice.toMap());
-    } else {
-      invoice.clientId = clientId;
+    var res = await db.query(
+      "Invoices",
+      where: "id = ?",
+      whereArgs: [id],
+    );
+    if (res.isNotEmpty) {
+      Invoice invoice = Invoice.fromMap(res.first);
+      invoice.clientId = null;
       await db.update(
         "Invoices",
         invoice.toMap(),
@@ -122,6 +119,31 @@ class DBProvider {
         whereArgs: [invoice.id],
       );
     }
+  }
+
+  //INVOICES
+
+  Future<Invoice> upsertInvoice(
+    Invoice invoice,
+    int clientId,
+    double discount,
+    double total,
+  ) async {
+    final db = await database;
+    if (invoice.id == null) {
+      invoice.id = await db.insert("invoices", invoice.toMap());
+    } else {
+      invoice.clientId = clientId;
+      invoice.discount = discount;
+      invoice.total = total;
+      await db.update(
+        "Invoices",
+        invoice.toMap(),
+        where: "id = ?",
+        whereArgs: [invoice.id],
+      );
+    }
+    print(invoice.toMap());
     return invoice;
   }
 
@@ -188,5 +210,14 @@ class DBProvider {
       whereArgs: [id],
     );
     return res.isNotEmpty ? Item.fromMap(res.first) : null;
+  }
+
+  deleteItem(int id) async {
+    final db = await database;
+    db.delete(
+      "Items",
+      where: "id = ?",
+      whereArgs: [id],
+    );
   }
 }

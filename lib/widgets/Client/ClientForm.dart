@@ -8,17 +8,15 @@ class ClientForm extends StatelessWidget {
   final TextEditingController clientEmail;
   final VoidCallback onSave;
   final VoidCallback onRemove;
-  final Client client;
   final void Function(Client) onChoose;
 
   const ClientForm({
     Key key,
+    this.clientFormKey,
     this.clientName,
     this.clientEmail,
     this.onSave,
     this.onRemove,
-    this.clientFormKey,
-    this.client,
     this.onChoose,
   }) : super(key: key);
 
@@ -77,7 +75,7 @@ class ClientForm extends StatelessWidget {
             children: [
               RaisedButton(
                 onPressed: () {
-                  // onRemove();
+                  onRemove();
                 },
                 child: Text('Delete'),
               ),

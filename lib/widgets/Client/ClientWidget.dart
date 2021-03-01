@@ -56,12 +56,11 @@ class _ClientWidgetState extends State<ClientWidget> {
             builder: (BuildContext context) {
               return AlertDialog(
                 content: ClientForm(
+                  clientFormKey: widget.clientFormKey,
                   clientName: widget.clientName,
                   clientEmail: widget.clientEmail,
                   onSave: widget.onSave,
                   onRemove: widget.onRemove,
-                  clientFormKey: widget.clientFormKey,
-                  client: _client,
                   onChoose: widget.onChoose,
                 ),
               );
@@ -76,7 +75,7 @@ class _ClientWidgetState extends State<ClientWidget> {
               size: 30,
             ),
             Text(
-              widget.clientName.text.isEmpty && _client == null
+              widget.clientName.text.isEmpty
                   ? 'Client'
                   : widget.clientName.text,
               style: TextStyle(
