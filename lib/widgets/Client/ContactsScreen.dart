@@ -20,6 +20,7 @@ class ContactsScreen extends StatefulWidget {
 
 class _ContactsScreenState extends State<ContactsScreen> {
   Iterable<Contact> _contacts;
+  List<Client> _clients = [];
 
   @override
   void initState() {
