@@ -2,9 +2,9 @@ class Item {
   int id;
   int invoiceId;
   final String title;
-  final int price;
-  final int quantity;
-  final int amount;
+  final double price;
+  final double quantity;
+  final double amount;
   static final columns = ["id", "title", "price", "quantity", "amount"];
 
   Item({

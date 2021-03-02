@@ -29,7 +29,7 @@ class DBProvider {
           CREATE TABLE Clients (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
-            email TEXT NOT NULL 
+            email TEXT 
       )""");
       await db.execute("""
           CREATE TABLE Invoices (
@@ -45,9 +45,9 @@ class DBProvider {
           CREATE TABLE Items (
             id INTEGER PRIMARY KEY,
             title TEXT NOT NULL,
-            price INTEGER NOT NULL,
-            quantity INTEGER NOT NULL,
-            amount INTEGER NOT NULL,
+            price REAL NOT NULL,
+            quantity REAL NOT NULL,
+            amount REAL NOT NULL,
             invoice_id INTEGER,
             FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION     
@@ -143,7 +143,6 @@ class DBProvider {
         whereArgs: [invoice.id],
       );
     }
-    print(invoice.toMap());
     return invoice;
   }
 
@@ -172,10 +171,10 @@ class DBProvider {
   Future<Item> upsertItem(Item item) async {
     final db = await database;
     if (item.id == null) {
-      item.id = await db.insert("items", item.toMap());
+      item.id = await db.insert("Items", item.toMap());
     } else {
       await db.update(
-        "items",
+        "Items",
         item.toMap(),
         where: "id = ?",
         whereArgs: [item.id],

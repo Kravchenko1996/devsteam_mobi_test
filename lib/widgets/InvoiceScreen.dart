@@ -5,8 +5,8 @@ import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ClientWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Discount/DiscountWidget.dart';
 import 'package:devsteam_mobi_test/widgets/InvoiceNameWidget.dart';
-import 'package:devsteam_mobi_test/widgets/Items/ItemForm.dart';
-import 'package:devsteam_mobi_test/widgets/Items/ItemWidget.dart';
+import 'package:devsteam_mobi_test/widgets/Item/ItemScreen.dart';
+import 'package:devsteam_mobi_test/widgets/Item/ItemWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -34,7 +34,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   final TextEditingController _itemTitleController = TextEditingController();
   final TextEditingController _itemPriceController = TextEditingController();
   final TextEditingController _itemQuantityController = TextEditingController();
+  final TextEditingController _itemAmountController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
+  final TextEditingController _differenceController = TextEditingController();
 
   Client newClient = Client();
   Invoice newInvoice = Invoice();
@@ -76,6 +78,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         total = res.total;
         _discountController.text = res.discount.toString();
         difference = subTotal - total;
+        _differenceController.text = difference.toString();
       });
     }
   }
@@ -163,24 +166,45 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     await DBProvider.db.getAllInvoices();
   }
 
+  void _saveItem(Item item) async {
+    await DBProvider.db.upsertItem(item);
+  }
+
   void _addItemToList() {
     if (_itemFormKey.currentState.validate()) {
-      int itemPrice = int.parse(_itemPriceController.text);
-      int itemQuantity = int.parse(_itemQuantityController.text);
+      double price = _itemPriceController.text.isNotEmpty
+          ? double.parse(_itemPriceController.text)
+          : 0.0;
+      double quantity = _itemQuantityController.text.isNotEmpty
+          ? double.parse(_itemQuantityController.text)
+          : 0.0;
+      double amount = _itemAmountController.text.isNotEmpty
+          ? double.parse(_itemAmountController.text)
+          : 0.0;
       Item newItem = Item(
         title: _itemTitleController.text,
-        price: itemPrice,
-        quantity: itemQuantity,
-        amount: itemPrice * itemQuantity,
+        price: price,
+        quantity: quantity,
+        amount: amount,
         invoiceId: null,
       );
+      _saveItem(newItem);
       setState(() {
         itemsOfInvoice.add(newItem);
         subTotal += newItem.amount;
+        _differenceController.text = (subTotal * discount / 100).toString();
         total += newItem.amount;
       });
     }
+    _updateDifference();
+    countTotal();
     Navigator.of(context).pop();
+  }
+
+  void _updateDifference() {
+    setState(() {
+      difference = (subTotal * double.parse(_discountController.text) / 100);
+    });
   }
 
   void _countSubtotalOfInvoice() {
@@ -203,36 +227,39 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       _itemTitleController.text = selectedItem.title;
       _itemPriceController.text = selectedItem.price.toString();
       _itemQuantityController.text = selectedItem.quantity.toString();
+      _itemAmountController.text = selectedItem.amount.toString();
     });
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            content: ItemForm(
-              itemFormKey: _itemFormKey,
-              itemTitle: _itemTitleController,
-              itemPrice: _itemPriceController,
-              itemQuantity: _itemQuantityController,
-              onSave: _changeItemInList,
-            ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return ItemScreen(
+            itemFormKey: _itemFormKey,
+            itemTitle: _itemTitleController,
+            itemPrice: _itemPriceController,
+            itemQuantity: _itemQuantityController,
+            itemAmount: _itemAmountController,
+            onSave: _changeItemInList,
           );
-        });
+        },
+      ),
+    );
   }
 
   void _changeItemInList() {
     int index = itemsOfInvoice.indexOf(selectedItem);
-    int itemPrice = int.parse(_itemPriceController.text);
-    int itemQuantity = int.parse(_itemQuantityController.text);
     Item editedItem = Item(
       title: _itemTitleController.text,
-      price: itemPrice,
-      quantity: itemQuantity,
-      amount: itemPrice * itemQuantity,
+      price: double.parse(_itemPriceController.text),
+      quantity: double.parse(_itemQuantityController.text),
+      amount: double.parse(_itemAmountController.text),
     );
     setState(() {
       itemsOfInvoice[index] = editedItem;
       subTotal -= selectedItem.amount;
       subTotal += editedItem.amount;
+      _updateDifference();
+      countTotal();
     });
     _itemFormKey.currentState.reset();
     Navigator.of(context).pop();
@@ -243,11 +270,13 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   }
 
   void _saveDiscount() {
-    setState(() {
-      discount = double.parse(_discountController.text);
-      difference = subTotal * discount / 100;
-      countTotal();
-    });
+    if (_discountController.text.isNotEmpty) {
+      setState(() {
+        discount = double.parse(_discountController.text);
+        difference = subTotal * discount / 100;
+        countTotal();
+      });
+    }
     Navigator.of(context).pop();
   }
 
@@ -307,6 +336,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                   itemTitle: _itemTitleController,
                   itemPrice: _itemPriceController,
                   itemQuantity: _itemQuantityController,
+                  itemAmount: _itemAmountController,
                   onSave: _addItemToList,
                 ),
                 Row(
@@ -323,10 +353,12 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                 DiscountWidget(
                   discountFormKey: _discountFormKey,
                   invoiceDiscount: _discountController,
+                  invoiceDifference: _differenceController,
                   onSave: _saveDiscount,
                   discount: discount,
                   invoice: widget.invoice != null ? widget.invoice : null,
                   difference: difference,
+                  subTotal: subTotal,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -364,7 +396,11 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       itemsOfInvoice.removeAt(index);
                       _deleteItem(currentItem.id);
                       subTotal -= currentItem.amount;
-                      total -= currentItem.amount;
+                      difference = (subTotal *
+                          double.parse(_discountController.text) /
+                          100);
+                      _differenceController.text = difference.toString();
+                      total = subTotal - difference;
                     });
                     Scaffold.of(context).showSnackBar(
                       SnackBar(

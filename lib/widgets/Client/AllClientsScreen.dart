@@ -1,21 +1,22 @@
 import 'package:devsteam_mobi_test/Database.dart';
 import 'package:devsteam_mobi_test/models/Client.dart';
-import 'package:devsteam_mobi_test/widgets/CenterLoadingIndicator.dart';
 import 'package:flutter/material.dart';
 
-class AllClientsScreen extends StatefulWidget {
+class AllClientsWidget extends StatefulWidget {
   final void Function(Client) onChoose;
+  final List<Client> clients;
 
-  const AllClientsScreen({
+  const AllClientsWidget({
     Key key,
     this.onChoose,
+    this.clients,
   }) : super(key: key);
 
   @override
-  _AllClientsScreenState createState() => _AllClientsScreenState();
+  _AllClientsWidgetState createState() => _AllClientsWidgetState();
 }
 
-class _AllClientsScreenState extends State<AllClientsScreen> {
+class _AllClientsWidgetState extends State<AllClientsWidget> {
   List<Client> clients = [];
 
   @override
@@ -33,26 +34,22 @@ class _AllClientsScreenState extends State<AllClientsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: clients.length == 0
-          ? CenterLoadingIndicator()
-          : ListView.builder(
-              itemCount: clients.length,
-              itemBuilder: (BuildContext context, int index) {
-                return Center(
-                  child: GestureDetector(
-                    child: Text(
-                      clients[index].name,
-                    ),
-                    onTap: () {
-                      widget.onChoose(clients[index]);
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                );
-              },
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: clients.length,
+      itemBuilder: (BuildContext context, int index) {
+        return Center(
+          child: GestureDetector(
+            child: Text(
+              clients[index].name,
             ),
+            onTap: () {
+              widget.onChoose(clients[index]);
+              Navigator.of(context).pop();
+            },
+          ),
+        );
+      },
     );
   }
 }

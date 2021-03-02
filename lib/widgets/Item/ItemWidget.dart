@@ -1,4 +1,4 @@
-import 'package:devsteam_mobi_test/widgets/Items/ItemForm.dart';
+import 'package:devsteam_mobi_test/widgets/Item/ItemScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -7,6 +7,7 @@ class ItemWidget extends StatefulWidget {
   final TextEditingController itemTitle;
   final TextEditingController itemPrice;
   final TextEditingController itemQuantity;
+  final TextEditingController itemAmount;
   final VoidCallback onSave;
   final int itemId;
 
@@ -16,6 +17,7 @@ class ItemWidget extends StatefulWidget {
     this.itemTitle,
     this.itemPrice,
     this.itemQuantity,
+    this.itemAmount,
     this.onSave,
     this.itemId,
   }) : super(key: key);
@@ -27,25 +29,28 @@ class ItemWidget extends StatefulWidget {
 class _ItemWidgetState extends State<ItemWidget> {
   @override
   Widget build(BuildContext context) {
-    return RaisedButton(
-      onPressed: () {
+    return MaterialButton(
+      padding: EdgeInsets.zero,
+      onPressed: () async {
         // Reset controllers to add new Item after editing old ones;
+        // widget.itemTitle.clear();
         widget.itemTitle.text = '';
         widget.itemPrice.text = '';
         widget.itemQuantity.text = '';
-        showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                content: ItemForm(
-                  itemFormKey: widget.itemFormKey,
-                  itemTitle: widget.itemTitle,
-                  itemPrice: widget.itemPrice,
-                  itemQuantity: widget.itemQuantity,
-                  onSave: widget.onSave,
-                ),
-              );
-            });
+        widget.itemAmount.text = '';
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ItemScreen(
+              itemFormKey: widget.itemFormKey,
+              itemTitle: widget.itemTitle,
+              itemPrice: widget.itemPrice,
+              itemQuantity: widget.itemQuantity,
+              itemAmount: widget.itemAmount,
+              onSave: widget.onSave,
+            ),
+          ),
+        );
       },
       child: Container(
         child: Row(
