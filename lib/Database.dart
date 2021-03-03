@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
+import 'package:devsteam_mobi_test/models/Payment.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -37,6 +38,7 @@ class DBProvider {
             name TEXT NOT NULL UNIQUE,
             total REAL,
             discount REAL,
+            balance_due REAL,
             client_id INTEGER,
             FOREIGN KEY (client_id) REFERENCES Clients (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION    
@@ -51,6 +53,15 @@ class DBProvider {
             invoice_id INTEGER,
             FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION     
+      )""");
+      await db.execute("""
+          CREATE TABLE Payments (
+            id INTEGER PRIMARY KEY,
+            method TEXT NOT NULL,
+            amount REAL NOT NULL,
+            invoice_id INTEGER,
+            FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
+              ON DELETE NO ACTION ON UPDATE NO ACTION  
       )""");
     });
   }
@@ -128,6 +139,7 @@ class DBProvider {
     int clientId,
     double discount,
     double total,
+      double balanceDue,
   ) async {
     final db = await database;
     if (invoice.id == null) {
@@ -136,6 +148,7 @@ class DBProvider {
       invoice.clientId = clientId;
       invoice.discount = discount;
       invoice.total = total;
+      invoice.balanceDue = balanceDue;
       await db.update(
         "Invoices",
         invoice.toMap(),
@@ -150,11 +163,11 @@ class DBProvider {
     final db = await database;
     List<Map> res = await db.query(
       "Invoices",
-      columns: Invoice.columns,
       where: "id = ?",
       whereArgs: [id],
     );
     Invoice invoice = Invoice.fromMap(res[0]);
+    print(invoice.toMap());
     return invoice;
   }
 
@@ -219,4 +232,44 @@ class DBProvider {
       whereArgs: [id],
     );
   }
+
+  // PAYMENTS
+
+  Future<Payment> upsertPayment(
+      Payment payment
+      ) async {
+    final db = await database;
+    if (payment.id == null) {
+      payment.id = await db.insert("Payments", payment.toMap());
+    } else {
+      await db.update(
+        "Payments",
+        payment.toMap(),
+        where: "id = ?",
+        whereArgs: [payment.id],
+      );
+    }
+    return payment;
+  }
+
+  Future<List<Payment>> getAllPayments() async {
+    final db = await database;
+    var res = await db.query("Payments");
+    List<Payment> payments =
+    res.isNotEmpty ? res.map((e) => Payment.fromMap(e)).toList() : [];
+    print(payments);
+    return payments;
+  }
+
+  getAllPaymentsByInvoiceId(int invoiceId) async {
+    final db = await database;
+    var res = await db.query(
+      "Payments",
+      where: "invoice_id = ?",
+      whereArgs: [invoiceId],
+    );
+    return res.isNotEmpty ? res.map((e) => Payment.fromMap(e)).toList() : null;
+  }
+
 }
+

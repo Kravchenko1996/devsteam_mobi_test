@@ -2,7 +2,7 @@ import 'package:contacts_service/contacts_service.dart';
 import 'package:devsteam_mobi_test/Database.dart';
 import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/widgets/CenterLoadingIndicator.dart';
-import 'package:devsteam_mobi_test/widgets/Client/AllClientsScreen.dart';
+import 'package:devsteam_mobi_test/widgets/Client/AllClientsWIdget.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -26,7 +26,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
   void initState() {
     super.initState();
     _getContacts();
-    // _getAllClients();
+    _getAllClients();
   }
 
   Future<void> _getContacts() async {
@@ -38,7 +38,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
   Future _getAllClients() async {
     var clients = await DBProvider.db.getAllClients();
-    print(clients);
     setState(() {
       _clients = clients;
     });
@@ -54,6 +53,12 @@ class _ContactsScreenState extends State<ContactsScreen> {
         ),
         centerTitle: true,
       ),
+      // ToDo FullClientInfoWidget
+      // floatingActionButton: FABWidget(
+      //   label: 'Create Client',
+      //   route: Container(),
+      // ),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: _contacts == null
           ? CenterLoadingIndicator()
           : SingleChildScrollView(
@@ -66,7 +71,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                         child: Text('All Clients'),
                       ),
                       AllClientsWidget(
-                        // clients: _clients,
+                        clients: _clients,
                         onChoose: widget.onChoose,
                       )
                     ],

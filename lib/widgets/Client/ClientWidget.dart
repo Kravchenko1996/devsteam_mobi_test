@@ -55,20 +55,6 @@ class _ClientWidgetState extends State<ClientWidget> {
     return MaterialButton(
       padding: EdgeInsets.zero,
       onPressed: () async {
-        // showDialog(
-        //     context: context,
-        //     builder: (BuildContext context) {
-        //       return AlertDialog(
-        //         content: ClientForm(
-        //           clientFormKey: widget.clientFormKey,
-        //           clientName: widget.clientName,
-        //           clientEmail: widget.clientEmail,
-        //           onSave: widget.onSave,
-        //           onRemove: widget.onRemove,
-        //           onChoose: widget.onChoose,
-        //         ),
-        //       );
-        //     });
         final PermissionStatus permissionStatus = await _getPermission();
         if (permissionStatus == PermissionStatus.granted) {
           if (widget.clientName.text.isEmpty) {

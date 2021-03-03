@@ -1,8 +1,7 @@
-import 'package:devsteam_mobi_test/Database.dart';
 import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:flutter/material.dart';
 
-class AllClientsWidget extends StatefulWidget {
+class AllClientsWidget extends StatelessWidget {
   final void Function(Client) onChoose;
   final List<Client> clients;
 
@@ -11,26 +10,6 @@ class AllClientsWidget extends StatefulWidget {
     this.onChoose,
     this.clients,
   }) : super(key: key);
-
-  @override
-  _AllClientsWidgetState createState() => _AllClientsWidgetState();
-}
-
-class _AllClientsWidgetState extends State<AllClientsWidget> {
-  List<Client> clients = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _getAllClients();
-  }
-
-  void _getAllClients() async {
-    clients = await DBProvider.db.getAllClients();
-    setState(() {
-      clients = clients;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +23,7 @@ class _AllClientsWidgetState extends State<AllClientsWidget> {
               clients[index].name,
             ),
             onTap: () {
-              widget.onChoose(clients[index]);
+              onChoose(clients[index]);
               Navigator.of(context).pop();
             },
           ),

@@ -2,11 +2,13 @@ import 'package:devsteam_mobi_test/Database.dart';
 import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/models/Invoice.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
+import 'package:devsteam_mobi_test/models/Payment.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ClientWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Discount/DiscountWidget.dart';
 import 'package:devsteam_mobi_test/widgets/InvoiceNameWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemScreen.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemWidget.dart';
+import 'package:devsteam_mobi_test/widgets/Payment/PaidWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -27,6 +29,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   final _clientFormKey = GlobalKey<FormState>();
   final _itemFormKey = GlobalKey<FormState>();
   final _discountFormKey = GlobalKey<FormState>();
+  final _paymentFormKey = GlobalKey<FormState>();
 
   final TextEditingController _invoiceNameController = TextEditingController();
   final TextEditingController _clientNameController = TextEditingController();
@@ -37,6 +40,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   final TextEditingController _itemAmountController = TextEditingController();
   final TextEditingController _discountController = TextEditingController();
   final TextEditingController _differenceController = TextEditingController();
+  final TextEditingController _paymentMethodCntrller = TextEditingController();
+  final TextEditingController _paymentAmountCntrller = TextEditingController();
+  final TextEditingController _invoiceBalanceDueController =
+      TextEditingController();
 
   Client newClient = Client();
   Invoice newInvoice = Invoice();
@@ -49,6 +56,8 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   double discount = 0.0;
   double difference = 0.0;
   double total = 0.0;
+  double balanceDue = 0.0;
+  List<Payment> _paymentsOfInvoice = [];
 
   @override
   void initState() {
@@ -65,7 +74,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       setState(() {
         itemsOfInvoice = res;
         _countSubtotalOfInvoice();
-        countTotal();
+        _countTotal();
       });
     }
   }
@@ -79,6 +88,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         _discountController.text = res.discount.toString();
         difference = subTotal - total;
         _differenceController.text = difference.toString();
+        _invoiceBalanceDueController.text = res.balanceDue.toString();
       });
     }
   }
@@ -136,12 +146,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         name: _invoiceNameController.text,
         total: total,
         clientId: _getClientId(),
+        balanceDue: balanceDue,
       );
       await DBProvider.db.upsertInvoice(
         widget.invoice == null ? newInvoice : widget.invoice,
         _getClientId(),
         discount,
         total,
+        balanceDue,
       );
       if (itemsOfInvoice != null) {
         itemsOfInvoice.forEach(
@@ -162,8 +174,22 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           },
         );
       }
+      if (_paymentsOfInvoice != null) {
+        _paymentsOfInvoice.forEach((Payment payment) async {
+          if (payment.invoiceId == null) {
+            await DBProvider.db.upsertPayment(
+              Payment(
+                method: payment.method,
+                amount: payment.amount,
+                invoiceId:
+                    widget.invoice != null ? widget.invoice.id : newInvoice.id,
+              ),
+            );
+          }
+        });
+      }
     }
-    await DBProvider.db.getAllInvoices();
+    Navigator.of(context).pop();
   }
 
   void _saveItem(Item item) async {
@@ -197,13 +223,17 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       });
     }
     _updateDifference();
-    countTotal();
+    _countTotal();
     Navigator.of(context).pop();
   }
 
   void _updateDifference() {
+    double disc = _discountController.text == null
+        ? double.parse(_discountController.text)
+        : discount;
     setState(() {
-      difference = (subTotal * double.parse(_discountController.text) / 100);
+      difference = (subTotal * disc / 100);
+      _differenceController.text = difference.toString();
     });
   }
 
@@ -259,7 +289,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       subTotal -= selectedItem.amount;
       subTotal += editedItem.amount;
       _updateDifference();
-      countTotal();
+      _countTotal();
     });
     _itemFormKey.currentState.reset();
     Navigator.of(context).pop();
@@ -274,16 +304,46 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       setState(() {
         discount = double.parse(_discountController.text);
         difference = subTotal * discount / 100;
-        countTotal();
+        _countTotal();
       });
     }
     Navigator.of(context).pop();
   }
 
-  void countTotal() {
+  void _countTotal() {
     setState(() {
       total = subTotal - difference;
     });
+  }
+
+  void _saveBalanceDue() {
+    if (_invoiceBalanceDueController.text.isNotEmpty) {
+      setState(() {
+        balanceDue = double.parse(_invoiceBalanceDueController.text);
+      });
+    }
+  }
+
+  void _savePayment(Payment payment) async {
+    await DBProvider.db.upsertPayment(payment);
+  }
+
+  void _addPaymentToList() async {
+    if (_paymentAmountCntrller.text.isNotEmpty) {
+      double amount = double.parse(_paymentAmountCntrller.text);
+      Payment newPayment = Payment(
+        method: _paymentMethodCntrller.text,
+        amount: amount,
+      );
+      setState(() {
+        _paymentsOfInvoice.add(newPayment);
+        _invoiceBalanceDueController.text = (total - amount).toString();
+      });
+      print(_paymentsOfInvoice);
+      _savePayment(newPayment);
+      _saveBalanceDue();
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -316,66 +376,89 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           margin: EdgeInsets.symmetric(horizontal: 15),
           child: SingleChildScrollView(
             physics: ScrollPhysics(),
-            child: Column(
-              children: [
-                ClientWidget(
-                  clientFormKey: _clientFormKey,
-                  clientName: _clientNameController,
-                  clientEmail: _clientEmailController,
-                  onSave: _saveClient,
-                  onChoose: _chooseClientFromList,
-                  onRemove: _removeClientFromInvoice,
-                  clientId: widget.invoice != null
-                      ? widget.invoice.clientId
-                      : selectedClientId,
-                ),
-                _buildItems(
-                    widget.invoice != null ? widget.invoice.id : newInvoice.id),
-                ItemWidget(
-                  itemFormKey: _itemFormKey,
-                  itemTitle: _itemTitleController,
-                  itemPrice: _itemPriceController,
-                  itemQuantity: _itemQuantityController,
-                  itemAmount: _itemAmountController,
-                  onSave: _addItemToList,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Subtotal',
-                    ),
-                    Text(
-                      subTotal.toString(),
-                    ),
-                  ],
-                ),
-                DiscountWidget(
-                  discountFormKey: _discountFormKey,
-                  invoiceDiscount: _discountController,
-                  invoiceDifference: _differenceController,
-                  onSave: _saveDiscount,
-                  discount: discount,
-                  invoice: widget.invoice != null ? widget.invoice : null,
-                  difference: difference,
-                  subTotal: subTotal,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total',
-                    ),
-                    Text(
-                      total.toStringAsFixed(2),
-                    ),
-                  ],
-                )
-              ],
-            ),
+            child: _buildBody(),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBody() {
+    return Column(
+      children: [
+        ClientWidget(
+          clientFormKey: _clientFormKey,
+          clientName: _clientNameController,
+          clientEmail: _clientEmailController,
+          onSave: _saveClient,
+          onChoose: _chooseClientFromList,
+          onRemove: _removeClientFromInvoice,
+          clientId: widget.invoice != null
+              ? widget.invoice.clientId
+              : selectedClientId,
+        ),
+        _buildItems(widget.invoice != null ? widget.invoice.id : newInvoice.id),
+        ItemWidget(
+          itemFormKey: _itemFormKey,
+          itemTitle: _itemTitleController,
+          itemPrice: _itemPriceController,
+          itemQuantity: _itemQuantityController,
+          itemAmount: _itemAmountController,
+          onSave: _addItemToList,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Subtotal',
+            ),
+            Text(
+              subTotal.toString(),
+            ),
+          ],
+        ),
+        DiscountWidget(
+          discountFormKey: _discountFormKey,
+          invoiceDiscount: _discountController,
+          invoiceDifference: _differenceController,
+          onSave: _saveDiscount,
+          discount: discount,
+          invoice: widget.invoice != null ? widget.invoice : null,
+          difference: difference,
+          subTotal: subTotal,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Total',
+            ),
+            Text(
+              total.toStringAsFixed(2),
+            ),
+          ],
+        ),
+        PaidWidget(
+          total: total,
+          paymentFormKey: _paymentFormKey,
+          paymentMethod: _paymentMethodCntrller,
+          paymentAmount: _paymentAmountCntrller,
+          onSave: _addPaymentToList,
+          invoiceBalanceDue: _invoiceBalanceDueController,
+          paymentsList: _paymentsOfInvoice,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Balance due',
+            ),
+            Text(
+              _invoiceBalanceDueController.text,
+            ),
+          ],
+        )
+      ],
     );
   }
 

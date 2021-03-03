@@ -4,14 +4,7 @@ class Invoice {
   final String name;
   double total;
   double discount;
-
-  static final columns = [
-    "id",
-    "client_id",
-    "name",
-    "total",
-    "discount"
-  ];
+  double balanceDue;
 
   Invoice({
     this.id,
@@ -19,15 +12,16 @@ class Invoice {
     this.name,
     this.total,
     this.discount,
+    this.balanceDue,
   });
 
   factory Invoice.fromMap(Map<String, dynamic> json) => Invoice(
-        id: json['id'],
-        clientId: json['client_id'],
-        name: json['name'],
-        total: json['total'],
-        discount: json['discount'],
-      );
+      id: json['id'],
+      clientId: json['client_id'],
+      name: json['name'],
+      total: json['total'],
+      discount: json['discount'],
+      balanceDue: json['balance_due']);
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -35,5 +29,6 @@ class Invoice {
         'name': name,
         'total': total,
         'discount': discount,
+        'balance_due': balanceDue,
       };
 }

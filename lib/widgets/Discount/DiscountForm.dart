@@ -1,3 +1,4 @@
+import 'package:devsteam_mobi_test/widgets/FormHeader.dart';
 import 'package:flutter/material.dart';
 
 class DiscountForm extends StatelessWidget {
@@ -33,17 +34,9 @@ class DiscountForm extends StatelessWidget {
             key: discountFormKey,
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Discount'),
-                    RaisedButton(
-                      child: Text('Save'),
-                      onPressed: () {
-                        onSave();
-                      },
-                    ),
-                  ],
+                FormHeader(
+                  title: 'Discount',
+                  onSave: onSave,
                 ),
                 TextFormField(
                   decoration: InputDecoration(
