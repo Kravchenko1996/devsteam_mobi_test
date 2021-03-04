@@ -113,12 +113,12 @@ class DBProvider {
     return res.isNotEmpty ? Client.fromMap(res.first) : null;
   }
 
-  removeClientFromInvoice(int id) async {
+  removeClientFromInvoice(int invoiceId) async {
     final db = await database;
     var res = await db.query(
       "Invoices",
       where: "id = ?",
-      whereArgs: [id],
+      whereArgs: [invoiceId],
     );
     if (res.isNotEmpty) {
       Invoice invoice = Invoice.fromMap(res.first);
@@ -139,11 +139,16 @@ class DBProvider {
     int clientId,
     double discount,
     double total,
-      double balanceDue,
+    double balanceDue,
   ) async {
     final db = await database;
     if (invoice.id == null) {
-      invoice.id = await db.insert("invoices", invoice.toMap());
+      if (clientId != null) {
+        invoice.clientId = clientId;
+        invoice.id = await db.insert("invoices", invoice.toMap());
+      } else {
+        invoice.id = await db.insert("invoices", invoice.toMap());
+      }
     } else {
       invoice.clientId = clientId;
       invoice.discount = discount;
@@ -167,7 +172,6 @@ class DBProvider {
       whereArgs: [id],
     );
     Invoice invoice = Invoice.fromMap(res[0]);
-    print(invoice.toMap());
     return invoice;
   }
 
@@ -181,11 +185,15 @@ class DBProvider {
 
 // ITEMS
 
-  Future<Item> upsertItem(Item item) async {
+  Future<Item> upsertItem(
+    Item item,
+    int invoiceId,
+  ) async {
     final db = await database;
     if (item.id == null) {
       item.id = await db.insert("Items", item.toMap());
     } else {
+      item.invoiceId = invoiceId;
       await db.update(
         "Items",
         item.toMap(),
@@ -235,9 +243,7 @@ class DBProvider {
 
   // PAYMENTS
 
-  Future<Payment> upsertPayment(
-      Payment payment
-      ) async {
+  Future<Payment> upsertPayment(Payment payment) async {
     final db = await database;
     if (payment.id == null) {
       payment.id = await db.insert("Payments", payment.toMap());
@@ -256,8 +262,7 @@ class DBProvider {
     final db = await database;
     var res = await db.query("Payments");
     List<Payment> payments =
-    res.isNotEmpty ? res.map((e) => Payment.fromMap(e)).toList() : [];
-    print(payments);
+        res.isNotEmpty ? res.map((e) => Payment.fromMap(e)).toList() : [];
     return payments;
   }
 
@@ -270,6 +275,4 @@ class DBProvider {
     );
     return res.isNotEmpty ? res.map((e) => Payment.fromMap(e)).toList() : null;
   }
-
 }
-

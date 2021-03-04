@@ -1,109 +1,133 @@
 import 'package:devsteam_mobi_test/models/Client.dart';
+import 'package:devsteam_mobi_test/models/Invoice.dart';
+import 'package:devsteam_mobi_test/viewmodels/client.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ContactsScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class ClientForm extends StatelessWidget {
+class ClientForm extends StatefulWidget {
   final GlobalKey clientFormKey;
   final TextEditingController clientName;
   final TextEditingController clientEmail;
-  final VoidCallback onSave;
-  final VoidCallback onRemove;
-  final void Function(Client) onChoose;
+  final Invoice invoice;
 
-  const ClientForm({
+  ClientForm({
     Key key,
     this.clientFormKey,
     this.clientName,
     this.clientEmail,
-    this.onSave,
-    this.onRemove,
-    this.onChoose,
+    this.invoice,
   }) : super(key: key);
 
   @override
+  _ClientFormState createState() => _ClientFormState();
+}
+
+class _ClientFormState extends State<ClientForm> {
+  @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: EdgeInsets.only(
-            left: 15,
-            top: 15,
-            right: 15,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 15,
-          ),
-          child: Form(
-            key: clientFormKey,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Client'),
-                    RaisedButton(
-                      child: Text('Save'),
-                      onPressed: () {
-                        onSave();
+    return Consumer<ClientView>(builder: (
+      BuildContext clientContext,
+      ClientView clientView,
+      Widget child,
+    ) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: EdgeInsets.only(
+              left: 15,
+              top: 15,
+              right: 15,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 15,
+            ),
+            child: Form(
+              key: widget.clientFormKey,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Client'),
+                      RaisedButton(
+                        child: Text('Save'),
+                        onPressed: () async {
+                          clientView.saveClient(
+                              Client(
+                                name: widget.clientName.text,
+                              ),
+                              context.read<ClientView>().getClient != null
+                                  ? context.read<ClientView>().getClient.id
+                                  : null);
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                  Container(
+                    child: TextFormField(
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Enter client name',
+                      ),
+                      controller: widget.clientName,
+                      validator: (val) {
+                        if (val.isEmpty) {
+                          return 'Enter something please!';
+                        }
+                        return null;
                       },
                     ),
-                  ],
-                ),
-                Container(
-                  child: TextFormField(
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Enter client name',
-                    ),
-                    controller: clientName,
-                    validator: (val) {
-                      if (val.isEmpty) {
-                        return 'Enter something please!';
-                      }
-                      return null;
-                    },
                   ),
-                ),
-                Container(
-                  child: TextFormField(
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: 'Enter client email',
+                  Container(
+                    child: TextFormField(
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Enter client email',
+                      ),
+                      controller: widget.clientEmail,
                     ),
-                    controller: clientEmail,
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    RaisedButton(
-                      onPressed: () {
-                        onRemove();
-                      },
-                      child: Text('Delete'),
-                    ),
-                    RaisedButton(
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ContactsScreen(
-                              onChoose: onChoose,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      RaisedButton(
+                        onPressed: () {
+                          clientView.removeClientFromInvoice(widget.invoice.id);
+                          setState(() {
+                            widget.clientName.text = '';
+                            widget.clientEmail.text = '';
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Delete'),
+                      ),
+                      RaisedButton(
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ContactsScreen(
+                                clientName: widget.clientName,
+                                clientEmail: widget.clientEmail,
+                                // onChoose: _selectClientFromList,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                      child: Text('All clients'),
-                    ),
-                  ],
-                ),
-              ],
+                          );
+                        },
+                        child: Text('All clients'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 }

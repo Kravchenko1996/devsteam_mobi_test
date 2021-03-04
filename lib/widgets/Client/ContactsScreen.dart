@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class ContactsScreen extends StatefulWidget {
-  final void Function(Client) onChoose;
+  final TextEditingController clientName;
+  final TextEditingController clientEmail;
 
   const ContactsScreen({
     Key key,
-    this.onChoose,
+    this.clientName,
+    this.clientEmail,
   }) : super(key: key);
 
   @override
@@ -72,7 +74,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
                       ),
                       AllClientsWidget(
                         clients: _clients,
-                        onChoose: widget.onChoose,
+                        clientName: widget.clientName,
+                        clientEmail: widget.clientEmail,
                       )
                     ],
                   ),

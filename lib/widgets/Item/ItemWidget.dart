@@ -27,6 +27,11 @@ class ItemWidget extends StatefulWidget {
 }
 
 class _ItemWidgetState extends State<ItemWidget> {
+  final _itemFormKey = GlobalKey<FormState>();
+  final TextEditingController _itemTitleController = TextEditingController();
+  final TextEditingController _itemPriceController = TextEditingController();
+  final TextEditingController _itemQuantityController = TextEditingController();
+  final TextEditingController _itemAmountController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return MaterialButton(
@@ -42,12 +47,12 @@ class _ItemWidgetState extends State<ItemWidget> {
           context,
           MaterialPageRoute(
             builder: (context) => ItemScreen(
-              itemFormKey: widget.itemFormKey,
-              itemTitle: widget.itemTitle,
-              itemPrice: widget.itemPrice,
-              itemQuantity: widget.itemQuantity,
-              itemAmount: widget.itemAmount,
-              onSave: widget.onSave,
+              itemFormKey: _itemFormKey,
+              itemTitle: _itemTitleController,
+              itemPrice: _itemPriceController,
+              itemQuantity: _itemQuantityController,
+              itemAmount: _itemAmountController,
+              // onSave: widget.onSave,
             ),
           ),
         );

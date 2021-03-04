@@ -3,6 +3,9 @@ import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/models/Invoice.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/models/Payment.dart';
+import 'package:devsteam_mobi_test/viewmodels/client.dart';
+import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
+import 'package:devsteam_mobi_test/viewmodels/item.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ClientWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Discount/DiscountWidget.dart';
 import 'package:devsteam_mobi_test/widgets/InvoiceNameWidget.dart';
@@ -11,6 +14,7 @@ import 'package:devsteam_mobi_test/widgets/Item/ItemWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Payment/PaidWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:provider/provider.dart';
 
 class InvoiceScreen extends StatefulWidget {
   final Invoice invoice;
@@ -26,14 +30,11 @@ class InvoiceScreen extends StatefulWidget {
 
 class _InvoiceScreenState extends State<InvoiceScreen> {
   final _invoiceFormKey = GlobalKey<FormState>();
-  final _clientFormKey = GlobalKey<FormState>();
   final _itemFormKey = GlobalKey<FormState>();
   final _discountFormKey = GlobalKey<FormState>();
   final _paymentFormKey = GlobalKey<FormState>();
 
   final TextEditingController _invoiceNameController = TextEditingController();
-  final TextEditingController _clientNameController = TextEditingController();
-  final TextEditingController _clientEmailController = TextEditingController();
   final TextEditingController _itemTitleController = TextEditingController();
   final TextEditingController _itemPriceController = TextEditingController();
   final TextEditingController _itemQuantityController = TextEditingController();
@@ -64,7 +65,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     super.initState();
     if (widget.invoice != null) {
       _getAllItemsByInvoiceId();
-      _getInvoiceInfo();
+      // _getInvoiceInfo();
     }
   }
 
@@ -79,122 +80,114 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     }
   }
 
-  void _getInvoiceInfo() async {
-    var res = await DBProvider.db.fetchInvoice(widget.invoice.id);
-    if (res != null) {
-      setState(() {
-        discount = res.discount != null ? res.discount : 0;
-        total = res.total;
-        _discountController.text = res.discount.toString();
-        difference = subTotal - total;
-        _differenceController.text = difference.toString();
-        _invoiceBalanceDueController.text = res.balanceDue.toString();
-      });
-    }
-  }
+  // void _getInvoiceInfo() async {
+  //   var res = await DBProvider.db.fetchInvoice(widget.invoice.id);
+  //   if (res != null) {
+  //     setState(() {
+  //       discount = res.discount != null ? res.discount : 0;
+  //       total = res.total;
+  //       _discountController.text = res.discount.toString();
+  //       difference = subTotal - total;
+  //       _differenceController.text = difference.toString();
+  //       _invoiceBalanceDueController.text = res.balanceDue.toString();
+  //     });
+  //   }
+  // }
 
-  void _chooseClientFromList(Client selectedClient) {
-    setState(() {
-      selectedClientId = selectedClient.id;
-      _clientNameController.text = selectedClient.name;
-      _clientEmailController.text = selectedClient.email;
-    });
-  }
+  // void _saveClient() async {
+  //   if (_clientFormKey.currentState.validate()) {
+  //     newClient = Client(
+  //       name: _clientNameController.text,
+  //       email: _clientEmailController.text,
+  //     );
+  //     await DBProvider.db.upsertClient(
+  //       newClient,
+  //       selectedClientId == null && widget.invoice != null
+  //           ? widget.invoice.clientId
+  //           : selectedClientId,
+  //     );
+  //     setState(() {
+  //       _clientNameController.text = _clientNameController.text;
+  //     });
+  //     Navigator.of(context).pop();
+  //   }
+  // }
 
-  void _saveClient() async {
-    if (_clientFormKey.currentState.validate()) {
-      newClient = Client(
-        name: _clientNameController.text,
-        email: _clientEmailController.text,
-      );
-      await DBProvider.db.upsertClient(
-        newClient,
-        selectedClientId == null && widget.invoice != null
-            ? widget.invoice.clientId
-            : selectedClientId,
-      );
-      setState(() {
-        _clientNameController.text = _clientNameController.text;
-      });
-      Navigator.of(context).pop();
-    }
-  }
+  // void _removeClientFromInvoice() async {
+  //   await DBProvider.db.removeClientFromInvoice(widget.invoice.id);
+  //   setState(() {
+  //     _clientNameController.text = '';
+  //     _clientEmailController.text = '';
+  //   });
+  //   Navigator.of(context).pop();
+  // }
+  //
+  // int _getClientId() {
+  //   var res = _clientNameController.text.isEmpty
+  //       ? null
+  //       : selectedClientId != null
+  //           ? selectedClientId
+  //           : newClient.id != null
+  //               ? newClient.id
+  //               : widget.invoice.clientId;
+  //   return res;
+  // }
 
-  void _removeClientFromInvoice() async {
-    await DBProvider.db.removeClientFromInvoice(widget.invoice.id);
-    setState(() {
-      _clientNameController.text = '';
-      _clientEmailController.text = '';
-    });
-    Navigator.of(context).pop();
-  }
+  // void _saveInvoice() async {
+  //   if (_invoiceFormKey.currentState.validate()) {
+  //     newInvoice = Invoice(
+  //       name: _invoiceNameController.text,
+  //       total: total,
+  //       clientId: _getClientId(),
+  //       balanceDue: balanceDue,
+  //     );
+  //     await DBProvider.db.upsertInvoice(
+  //       widget.invoice == null ? newInvoice : widget.invoice,
+  //       _getClientId(),
+  //       discount,
+  //       total,
+  //       balanceDue,
+  //     );
+  //     if (itemsOfInvoice != null) {
+  //       itemsOfInvoice.forEach(
+  //         (Item item) async {
+  //           if (item.invoiceId == null) {
+  //             await DBProvider.db.upsertItem(
+  //               Item(
+  //                 title: item.title,
+  //                 price: item.price,
+  //                 quantity: item.quantity,
+  //                 amount: item.amount,
+  //                 invoiceId: widget.invoice != null
+  //                     ? widget.invoice.id
+  //                     : newInvoice.id,
+  //               ),
+  //             );
+  //           }
+  //         },
+  //       );
+  //     }
+  //     if (_paymentsOfInvoice != null) {
+  //       _paymentsOfInvoice.forEach((Payment payment) async {
+  //         if (payment.invoiceId == null) {
+  //           await DBProvider.db.upsertPayment(
+  //             Payment(
+  //               method: payment.method,
+  //               amount: payment.amount,
+  //               invoiceId:
+  //                   widget.invoice != null ? widget.invoice.id : newInvoice.id,
+  //             ),
+  //           );
+  //         }
+  //       });
+  //     }
+  //   }
+  //   Navigator.of(context).pop();
+  // }
 
-  int _getClientId() {
-    var res = _clientNameController.text.isEmpty
-        ? null
-        : selectedClientId != null
-            ? selectedClientId
-            : newClient.id != null
-                ? newClient.id
-                : widget.invoice.clientId;
-    return res;
-  }
-
-  void _saveInvoice() async {
-    if (_invoiceFormKey.currentState.validate()) {
-      newInvoice = Invoice(
-        name: _invoiceNameController.text,
-        total: total,
-        clientId: _getClientId(),
-        balanceDue: balanceDue,
-      );
-      await DBProvider.db.upsertInvoice(
-        widget.invoice == null ? newInvoice : widget.invoice,
-        _getClientId(),
-        discount,
-        total,
-        balanceDue,
-      );
-      if (itemsOfInvoice != null) {
-        itemsOfInvoice.forEach(
-          (Item item) async {
-            if (item.invoiceId == null) {
-              await DBProvider.db.upsertItem(
-                Item(
-                  title: item.title,
-                  price: item.price,
-                  quantity: item.quantity,
-                  amount: item.amount,
-                  invoiceId: widget.invoice != null
-                      ? widget.invoice.id
-                      : newInvoice.id,
-                ),
-              );
-            }
-          },
-        );
-      }
-      if (_paymentsOfInvoice != null) {
-        _paymentsOfInvoice.forEach((Payment payment) async {
-          if (payment.invoiceId == null) {
-            await DBProvider.db.upsertPayment(
-              Payment(
-                method: payment.method,
-                amount: payment.amount,
-                invoiceId:
-                    widget.invoice != null ? widget.invoice.id : newInvoice.id,
-              ),
-            );
-          }
-        });
-      }
-    }
-    Navigator.of(context).pop();
-  }
-
-  void _saveItem(Item item) async {
-    await DBProvider.db.upsertItem(item);
-  }
+  // void _saveItem(Item item) async {
+  //   await DBProvider.db.upsertItem(item);
+  // }
 
   void _addItemToList() {
     if (_itemFormKey.currentState.validate()) {
@@ -214,7 +207,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         amount: amount,
         invoiceId: null,
       );
-      _saveItem(newItem);
+      // _saveItem(newItem);
       setState(() {
         itemsOfInvoice.add(newItem);
         subTotal += newItem.amount;
@@ -339,7 +332,6 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         _paymentsOfInvoice.add(newPayment);
         _invoiceBalanceDueController.text = (total - amount).toString();
       });
-      print(_paymentsOfInvoice);
       _savePayment(newPayment);
       _saveBalanceDue();
       Navigator.of(context).pop();
@@ -348,56 +340,94 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Icon(MdiIcons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Form(
-          key: _invoiceFormKey,
-          child: InvoiceNameWidget(
-            invoice: widget.invoice,
-            invoiceName: _invoiceNameController,
-          ),
-        ),
-        actions: [
-          MaterialButton(
-            onPressed: () async {
-              _saveInvoice();
-            },
-            child: Text('Save'),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 15),
-          child: SingleChildScrollView(
-            physics: ScrollPhysics(),
-            child: _buildBody(),
-          ),
-        ),
-      ),
+    return Consumer<InvoiceView>(
+      builder: (
+        BuildContext invoiceContext,
+        InvoiceView invoiceView,
+        Widget child,
+      ) {
+        return Consumer<ItemView>(
+          builder: (
+            BuildContext itemContext,
+            ItemView itemView,
+            Widget child,
+          ) {
+            return Scaffold(
+              resizeToAvoidBottomInset: true,
+              appBar: AppBar(
+                leading: IconButton(
+                  icon: Icon(MdiIcons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                title: Form(
+                  key: _invoiceFormKey,
+                  child: InvoiceNameWidget(
+                    invoice: widget.invoice,
+                    invoiceName: _invoiceNameController,
+                  ),
+                ),
+                actions: [
+                  MaterialButton(
+                    onPressed: () async {
+                      invoiceView.saveInvoice(
+                        widget.invoice ??
+                            Invoice(
+                              name: _invoiceNameController.text,
+                            ),
+                        context.read<ClientView>().getClient != null
+                            ? context.read<ClientView>().getClient.id
+                            : null,
+                      );
+                      itemView.items.forEach(
+                        (Item item) async {
+                          if (item.invoiceId == null) {
+                            itemView.saveItem(item, widget.invoice.id);
+                            // await DBProvider.db.upsertItem(
+                              // Item(
+                              //   title: item.title,
+                              //   price: item.price,
+                              //   quantity: item.quantity,
+                              //   amount: item.amount,
+                              //   invoiceId: widget.invoice != null
+                              //       ? widget.invoice.id
+                              //       : newInvoice.id,
+                              // ),
+                            // );
+                          }
+                        },
+                      );
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Save'),
+                  ),
+                ],
+              ),
+              body: SafeArea(
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 15),
+                  child: SingleChildScrollView(
+                    physics: ScrollPhysics(),
+                    child: _buildBody(itemView),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(ItemView itemView) {
     return Column(
       children: [
         ClientWidget(
-          clientFormKey: _clientFormKey,
-          clientName: _clientNameController,
-          clientEmail: _clientEmailController,
-          onSave: _saveClient,
-          onChoose: _chooseClientFromList,
-          onRemove: _removeClientFromInvoice,
-          clientId: widget.invoice != null
-              ? widget.invoice.clientId
-              : selectedClientId,
+          invoice: widget.invoice,
         ),
-        _buildItems(widget.invoice != null ? widget.invoice.id : newInvoice.id),
+        _buildItems(
+          widget.invoice != null ? widget.invoice.id : newInvoice.id,
+          itemView,
+        ),
         ItemWidget(
           itemFormKey: _itemFormKey,
           itemTitle: _itemTitleController,
@@ -434,8 +464,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
               'Total',
             ),
             Text(
-              total.toStringAsFixed(2),
-            ),
+                // total.toStringAsFixed(2),
+                //ToDo fix
+                '0'),
           ],
         ),
         PaidWidget(
@@ -462,26 +493,26 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     );
   }
 
-  Widget _buildItems(int invoiceId) {
+  Widget _buildItems(int invoiceId, ItemView itemView) {
     return Container(
       child: itemsOfInvoice == null
           ? Container()
           : ListView.builder(
               physics: NeverScrollableScrollPhysics(),
               shrinkWrap: true,
-              itemCount: itemsOfInvoice.length,
+              itemCount: itemView.items.length,
               itemBuilder: (BuildContext context, int index) {
-                final Item currentItem = itemsOfInvoice[index];
+                final Item currentItem = itemView.items[index];
                 return Dismissible(
                   key: UniqueKey(),
                   onDismissed: (direction) {
                     setState(() {
-                      itemsOfInvoice.removeAt(index);
+                      itemView.items.removeAt(index);
                       _deleteItem(currentItem.id);
                       subTotal -= currentItem.amount;
-                      difference = (subTotal *
-                          double.parse(_discountController.text) /
-                          100);
+                      // difference = (subTotal *
+                      //     double.parse(_discountController.text) /
+                      //     100);
                       _differenceController.text = difference.toString();
                       total = subTotal - difference;
                     });

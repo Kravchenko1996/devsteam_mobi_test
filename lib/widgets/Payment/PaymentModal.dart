@@ -91,7 +91,7 @@ class _PaymentModalState extends State<PaymentModal> {
                   children: [
                     FormHeader(
                       title: 'Add payment',
-                      onSave: widget.onSave,
+                      // onSave: widget.onSave,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
