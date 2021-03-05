@@ -1,5 +1,6 @@
-import 'package:devsteam_mobi_test/widgets/FormHeader.dart';
+import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class DiscountForm extends StatelessWidget {
   final GlobalKey discountFormKey;
@@ -34,9 +35,22 @@ class DiscountForm extends StatelessWidget {
             key: discountFormKey,
             child: Column(
               children: [
-                FormHeader(
-                  title: 'Discount',
-                  // onSave: onSave,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Discount'),
+                    RaisedButton(
+                      child: Text('Save'),
+                      onPressed: () {
+                        context.read<InvoiceView>().saveDiscount(
+                              double.parse(
+                                invoiceDiscount.text,
+                              ),
+                            );
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
                 ),
                 TextFormField(
                   decoration: InputDecoration(

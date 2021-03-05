@@ -1,10 +1,12 @@
 import 'package:devsteam_mobi_test/Database.dart';
 import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
+import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/widgets/CenterLoadingIndicator.dart';
 import 'package:devsteam_mobi_test/widgets/FABWidget.dart';
 import 'package:devsteam_mobi_test/widgets/InvoiceScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class InvoicesPage extends StatefulWidget {
   @override
@@ -12,8 +14,11 @@ class InvoicesPage extends StatefulWidget {
 }
 
 class _InvoicesPageState extends State<InvoicesPage> {
-  Future _getAllInvoices() async {
-    return await DBProvider.db.getAllInvoices();
+
+  @override
+  void initState() {
+    super.initState();
+    Provider.of<InvoiceView>(context, listen: false).getAllInvoices();
   }
 
   @override
@@ -21,26 +26,24 @@ class _InvoicesPageState extends State<InvoicesPage> {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: FABWidget(
-        label: 'Create invoice',
+        label: 'invoice',
         route: InvoiceScreen(),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: ScrollPhysics(),
-          child: FutureBuilder(
-            future: _getAllInvoices(),
-            builder:
-                (BuildContext context, AsyncSnapshot<dynamic> projectSnap) {
-              if (projectSnap.connectionState == ConnectionState.none &&
-                  projectSnap.hasData == null) {
-                return Container();
-              }
-              return projectSnap.data == null
+          child: Consumer<InvoiceView>(
+            builder: (
+              BuildContext invoiceContext,
+              InvoiceView invoiceView,
+              Widget child,
+            ) {
+              return invoiceView.invoices == null
                   ? CenterLoadingIndicator()
                   : ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
-                      itemCount: projectSnap.data.length,
+                      itemCount: invoiceView.invoices.length,
                       itemBuilder: (BuildContext context, int index) {
                         return GestureDetector(
                           onTap: () async {
@@ -48,7 +51,7 @@ class _InvoicesPageState extends State<InvoicesPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => InvoiceScreen(
-                                  invoice: projectSnap.data[index],
+                                  invoice: invoiceView.invoices[index],
                                 ),
                               ),
                             );
@@ -61,17 +64,18 @@ class _InvoicesPageState extends State<InvoicesPage> {
                               child: Column(
                                 children: [
                                   _buildClientInfo(
-                                      projectSnap.data[index].clientId),
+                                      invoiceView.invoices[index].clientId),
                                   Center(
                                     child: Text(
-                                      '${projectSnap.data[index].name}',
+                                      '${invoiceView.invoices[index].name}',
                                       style: TextStyle(
                                         color: Colors.red,
                                         fontSize: 20,
                                       ),
                                     ),
                                   ),
-                                  _buildItemsInfo(projectSnap.data[index].id),
+                                  _buildItemsInfo(
+                                      invoiceView.invoices[index].id),
                                 ],
                               ),
                             ),

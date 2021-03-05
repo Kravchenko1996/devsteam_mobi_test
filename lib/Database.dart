@@ -87,18 +87,6 @@ class DBProvider {
     return client;
   }
 
-  Future<Client> fetchClient(int id) async {
-    final db = await database;
-    List<Map> res = await db.query(
-      "Clients",
-      columns: Client.columns,
-      where: "id = ?",
-      whereArgs: [id],
-    );
-    Client client = Client.fromMap(res[0]);
-    return client;
-  }
-
   getAllClients() async {
     final db = await database;
     var res = await db.query("Clients");
@@ -109,7 +97,11 @@ class DBProvider {
 
   getClientById(int id) async {
     final db = await database;
-    var res = await db.query("Clients", where: "id = ?", whereArgs: [id]);
+    var res = await db.query(
+      "Clients",
+      where: "id = ?",
+      whereArgs: [id],
+    );
     return res.isNotEmpty ? Client.fromMap(res.first) : null;
   }
 
@@ -164,15 +156,14 @@ class DBProvider {
     return invoice;
   }
 
-  Future<Invoice> fetchInvoice(int id) async {
+  getInvoiceById(int id) async {
     final db = await database;
-    List<Map> res = await db.query(
+    var res = await db.query(
       "Invoices",
       where: "id = ?",
       whereArgs: [id],
     );
-    Invoice invoice = Invoice.fromMap(res[0]);
-    return invoice;
+    return res.isNotEmpty ? Invoice.fromMap(res.first) : null;
   }
 
   getAllInvoices() async {
@@ -193,7 +184,9 @@ class DBProvider {
     if (item.id == null) {
       item.id = await db.insert("Items", item.toMap());
     } else {
-      item.invoiceId = invoiceId;
+      if (item.invoiceId == null) {
+        item.invoiceId = invoiceId;
+      }
       await db.update(
         "Items",
         item.toMap(),

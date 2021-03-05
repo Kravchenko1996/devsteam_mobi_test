@@ -1,4 +1,5 @@
 import 'package:devsteam_mobi_test/models/Item.dart';
+import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/item.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemForm.dart';
 import 'package:flutter/material.dart';
@@ -12,16 +13,20 @@ class ItemScreen extends StatelessWidget {
   final TextEditingController itemQuantity;
   final TextEditingController itemAmount;
   final VoidCallback onSave;
+  final List<Item> itemsOfInvoice;
+  final bool toCreate;
 
-  const ItemScreen({
-    Key key,
-    this.itemFormKey,
-    this.itemTitle,
-    this.itemPrice,
-    this.itemQuantity,
-    this.itemAmount,
-    this.onSave,
-  }) : super(key: key);
+  const ItemScreen(
+      {Key key,
+      this.itemFormKey,
+      this.itemTitle,
+      this.itemPrice,
+      this.itemQuantity,
+      this.itemAmount,
+      this.onSave,
+      this.itemsOfInvoice,
+      this.toCreate})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -40,23 +45,40 @@ class ItemScreen extends StatelessWidget {
             actions: [
               MaterialButton(
                 onPressed: () async {
-                  itemView.saveItem(
-                    Item(
+                  if (toCreate) {
+                    Item newItem = Item(
                       title: itemTitle.text,
                       price: double.parse(itemPrice.text),
                       quantity: double.parse(itemQuantity.text),
                       amount: double.parse(itemAmount.text),
-                    ),
-                    null,
-                  );
-                  itemView.addItemToList(
-                    Item(
+                    );
+                    itemView.saveItem(
+                      newItem,
+                      null,
+                    );
+                    itemsOfInvoice.add(newItem);
+                    context.read<InvoiceView>().setSubTotal =
+                        context.read<InvoiceView>().subTotal +
+                            newItem.amount;
+                  } else {
+                    Item editedItem = Item(
+                      id: itemView.item.id,
                       title: itemTitle.text,
                       price: double.parse(itemPrice.text),
                       quantity: double.parse(itemQuantity.text),
                       amount: double.parse(itemAmount.text),
-                    ),
-                  );
+                    );
+                    int index = itemsOfInvoice.indexOf(itemView.item);
+                    itemsOfInvoice[index] = editedItem;
+                    itemView.saveItem(
+                      editedItem,
+                      itemView.item.invoiceId,
+                    );
+                    context.read<InvoiceView>().setSubTotal =
+                        context.read<InvoiceView>().subTotal +
+                            editedItem.amount;
+                  }
+                  context.read<InvoiceView>().updateDifference();
                   Navigator.of(context).pop();
                   // onSave();
                 },

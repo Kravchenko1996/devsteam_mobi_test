@@ -5,10 +5,7 @@ import 'package:flutter/material.dart';
 class ItemView with ChangeNotifier {
   Item _item;
 
-  Item get getItem => _item;
-  List<Item> _items = [];
-
-  List<Item> get items => _items;
+  Item get item => _item;
 
   void saveItem(
     Item item,
@@ -18,21 +15,16 @@ class ItemView with ChangeNotifier {
       item,
       invoiceId,
     );
-    // print('***');
-    // print(res.toMap());
     _item = res;
-    //ToDo insert invoiceId for new Items
-    // var result = _items.firstWhere((element) => element.id == res.id);
-    // print(result);
     notifyListeners();
   }
 
-  void addItemToList(Item item) {
-    _items.add(item);
+  void selectItemFromList(Item selectedItem) {
+    _item = selectedItem;
     notifyListeners();
   }
 
-  void getAllItems() async {
-    await DBProvider.db.getAllItems();
+  void deleteItem(int itemId) async {
+    await DBProvider.db.deleteItem(itemId);
   }
 }

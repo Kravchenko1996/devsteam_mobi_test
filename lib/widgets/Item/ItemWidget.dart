@@ -1,3 +1,4 @@
+import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -10,28 +11,26 @@ class ItemWidget extends StatefulWidget {
   final TextEditingController itemAmount;
   final VoidCallback onSave;
   final int itemId;
+  final List<Item> itemsOfInvoice;
 
-  const ItemWidget({
-    Key key,
-    this.itemFormKey,
-    this.itemTitle,
-    this.itemPrice,
-    this.itemQuantity,
-    this.itemAmount,
-    this.onSave,
-    this.itemId,
-  }) : super(key: key);
+  const ItemWidget(
+      {Key key,
+      this.itemFormKey,
+      this.itemTitle,
+      this.itemPrice,
+      this.itemQuantity,
+      this.itemAmount,
+      this.onSave,
+      this.itemId,
+      this.itemsOfInvoice})
+      : super(key: key);
 
   @override
   _ItemWidgetState createState() => _ItemWidgetState();
 }
 
 class _ItemWidgetState extends State<ItemWidget> {
-  final _itemFormKey = GlobalKey<FormState>();
-  final TextEditingController _itemTitleController = TextEditingController();
-  final TextEditingController _itemPriceController = TextEditingController();
-  final TextEditingController _itemQuantityController = TextEditingController();
-  final TextEditingController _itemAmountController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return MaterialButton(
@@ -47,12 +46,13 @@ class _ItemWidgetState extends State<ItemWidget> {
           context,
           MaterialPageRoute(
             builder: (context) => ItemScreen(
-              itemFormKey: _itemFormKey,
-              itemTitle: _itemTitleController,
-              itemPrice: _itemPriceController,
-              itemQuantity: _itemQuantityController,
-              itemAmount: _itemAmountController,
-              // onSave: widget.onSave,
+              itemFormKey: widget.itemFormKey,
+              itemTitle: widget.itemTitle,
+              itemPrice: widget.itemPrice,
+              itemQuantity: widget.itemQuantity,
+              itemAmount: widget.itemAmount,
+              itemsOfInvoice: widget.itemsOfInvoice,
+              toCreate: true,
             ),
           ),
         );
