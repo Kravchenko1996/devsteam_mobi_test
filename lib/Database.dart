@@ -38,7 +38,7 @@ class DBProvider {
             name TEXT NOT NULL UNIQUE,
             total REAL,
             discount REAL,
-            balance_due REAL,
+            date INTEGER,
             client_id INTEGER,
             FOREIGN KEY (client_id) REFERENCES Clients (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION    
@@ -131,7 +131,7 @@ class DBProvider {
     int clientId,
     double discount,
     double total,
-    double balanceDue,
+    int date,
   ) async {
     final db = await database;
     if (invoice.id == null) {
@@ -145,7 +145,7 @@ class DBProvider {
       invoice.clientId = clientId;
       invoice.discount = discount;
       invoice.total = total;
-      invoice.balanceDue = balanceDue;
+      invoice.date = date;
       await db.update(
         "Invoices",
         invoice.toMap(),
@@ -236,11 +236,17 @@ class DBProvider {
 
   // PAYMENTS
 
-  Future<Payment> upsertPayment(Payment payment) async {
+  Future<Payment> upsertPayment(
+    Payment payment,
+    int invoiceId,
+  ) async {
     final db = await database;
     if (payment.id == null) {
       payment.id = await db.insert("Payments", payment.toMap());
     } else {
+      if (payment.invoiceId == null) {
+        payment.invoiceId = invoiceId;
+      }
       await db.update(
         "Payments",
         payment.toMap(),
@@ -267,5 +273,14 @@ class DBProvider {
       whereArgs: [invoiceId],
     );
     return res.isNotEmpty ? res.map((e) => Payment.fromMap(e)).toList() : null;
+  }
+
+  deletePayment(int id) async {
+    final db = await database;
+    db.delete(
+      "Payments",
+      where: "id = ?",
+      whereArgs: [id],
+    );
   }
 }

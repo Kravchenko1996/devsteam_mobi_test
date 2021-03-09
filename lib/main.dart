@@ -1,6 +1,7 @@
 import 'package:devsteam_mobi_test/viewmodels/client.dart';
 import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/item.dart';
+import 'package:devsteam_mobi_test/viewmodels/payment.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,6 +23,9 @@ void initApp() {
         ),
         ChangeNotifierProvider<ItemView>(
           create: (_) => ItemView(),
+        ),
+        ChangeNotifierProvider<PaymentView>(
+          create: (_) => PaymentView(),
         ),
       ],
       child: MyApp(),

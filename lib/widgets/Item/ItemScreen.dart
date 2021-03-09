@@ -12,21 +12,17 @@ class ItemScreen extends StatelessWidget {
   final TextEditingController itemPrice;
   final TextEditingController itemQuantity;
   final TextEditingController itemAmount;
-  final VoidCallback onSave;
-  final List<Item> itemsOfInvoice;
   final bool toCreate;
 
-  const ItemScreen(
-      {Key key,
-      this.itemFormKey,
-      this.itemTitle,
-      this.itemPrice,
-      this.itemQuantity,
-      this.itemAmount,
-      this.onSave,
-      this.itemsOfInvoice,
-      this.toCreate})
-      : super(key: key);
+  const ItemScreen({
+    Key key,
+    this.itemFormKey,
+    this.itemTitle,
+    this.itemPrice,
+    this.itemQuantity,
+    this.itemAmount,
+    this.toCreate,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -36,66 +32,73 @@ class ItemScreen extends StatelessWidget {
         ItemView itemView,
         Widget child,
       ) {
-        return Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              icon: Icon(MdiIcons.close),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            actions: [
-              MaterialButton(
-                onPressed: () async {
-                  if (toCreate) {
-                    Item newItem = Item(
-                      title: itemTitle.text,
-                      price: double.parse(itemPrice.text),
-                      quantity: double.parse(itemQuantity.text),
-                      amount: double.parse(itemAmount.text),
-                    );
-                    itemView.saveItem(
-                      newItem,
-                      null,
-                    );
-                    itemsOfInvoice.add(newItem);
-                    context.read<InvoiceView>().setSubTotal =
-                        context.read<InvoiceView>().subTotal +
-                            newItem.amount;
-                  } else {
-                    Item editedItem = Item(
-                      id: itemView.item.id,
-                      title: itemTitle.text,
-                      price: double.parse(itemPrice.text),
-                      quantity: double.parse(itemQuantity.text),
-                      amount: double.parse(itemAmount.text),
-                    );
-                    int index = itemsOfInvoice.indexOf(itemView.item);
-                    itemsOfInvoice[index] = editedItem;
-                    itemView.saveItem(
-                      editedItem,
-                      itemView.item.invoiceId,
-                    );
-                    context.read<InvoiceView>().setSubTotal =
-                        context.read<InvoiceView>().subTotal +
-                            editedItem.amount;
-                  }
-                  context.read<InvoiceView>().updateDifference();
-                  Navigator.of(context).pop();
-                  // onSave();
-                },
-                child: Text('Save'),
+        return Consumer<InvoiceView>(
+          builder: (
+            BuildContext invoiceContext,
+            InvoiceView invoiceView,
+            Widget child,
+          ) {
+            return Scaffold(
+              appBar: AppBar(
+                leading: IconButton(
+                  icon: Icon(MdiIcons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                actions: [
+                  MaterialButton(
+                    onPressed: () async {
+                      if (toCreate) {
+                        Item newItem = Item(
+                          title: itemTitle.text,
+                          price: double.parse(itemPrice.text),
+                          quantity: double.parse(itemQuantity.text),
+                          amount: double.parse(itemAmount.text),
+                        );
+                        itemView.saveItem(
+                          newItem,
+                          null,
+                        );
+                        invoiceView.itemsOfInvoice.add(newItem);
+                        invoiceView.countSubtotal(invoiceView.itemsOfInvoice);
+                      } else {
+                        Item editedItem = Item(
+                          id: itemView.item.id,
+                          title: itemTitle.text,
+                          price: double.parse(itemPrice.text),
+                          quantity: double.parse(itemQuantity.text),
+                          amount: double.parse(itemAmount.text),
+                        );
+                        int index =
+                            invoiceView.itemsOfInvoice.indexOf(itemView.item);
+                        invoiceView.itemsOfInvoice[index] = editedItem;
+                        itemView.saveItem(
+                          editedItem,
+                          itemView.item.invoiceId,
+                        );
+                        invoiceView.countSubtotal(invoiceView.itemsOfInvoice);
+                      }
+                      invoiceView.updateDifference();
+                      invoiceView.setTotal =
+                          invoiceView.subTotal - invoiceView.difference;
+                      Navigator.of(context).pop();
+                      // onSave();
+                    },
+                    child: Text('Save'),
+                  ),
+                ],
               ),
-            ],
-          ),
-          body: Container(
-            margin: EdgeInsets.all(15),
-            child: ItemForm(
-              itemFormKey: itemFormKey,
-              itemTitle: itemTitle,
-              itemPrice: itemPrice,
-              itemQuantity: itemQuantity,
-              itemAmount: itemAmount,
-            ),
-          ),
+              body: Container(
+                margin: EdgeInsets.all(15),
+                child: ItemForm(
+                  itemFormKey: itemFormKey,
+                  itemTitle: itemTitle,
+                  itemPrice: itemPrice,
+                  itemQuantity: itemQuantity,
+                  itemAmount: itemAmount,
+                ),
+              ),
+            );
+          },
         );
       },
     );

@@ -12,46 +12,66 @@ class InvoiceView with ChangeNotifier {
   List<Invoice> get invoices => _invoices;
 
   double _subTotal = 0;
+
   double get subTotal => _subTotal;
+
   set setSubTotal(double value) {
     _subTotal = value;
   }
 
   double _discount;
+
   double get discount => _discount;
+
   set setDiscount(double value) {
     _discount = value;
   }
 
   double _difference = 0;
+
   double get difference => _difference;
+
   set setDifference(double value) {
     _difference = value;
   }
+
+  List<Item> _itemsOfInvoice = [];
+
+  List<Item> get itemsOfInvoice => _itemsOfInvoice;
+
+  set setItemsOfInvoice(List<Item> value) {
+    _itemsOfInvoice = value;
+  }
+
+  double _total = 0;
+
+  double get total => _total;
+
+  set setTotal(double value) {
+    _total = value;
+  }
+
+  DateTime _date = DateTime.now();
+
+  DateTime get date => _date;
+
+  set setDate(DateTime value) {
+    _date = value;
+  }
+
   Future<Invoice> saveInvoice(
     Invoice invoice,
     int clientId,
+    double discount,
+    double total,
+    int date,
   ) async {
-    Invoice res = await DBProvider.db.upsertInvoice(
-      invoice,
-      clientId,
-      null,
-      null,
-      null,
-    );
+    Invoice res = await DBProvider.db
+        .upsertInvoice(invoice, clientId, discount, total, date);
     getAllInvoices();
+    _total = total;
+    notifyListeners();
     return res;
-  }
-
-  void countSubtotal(List<Item> itemsOfInvoice) {
-    print(itemsOfInvoice);
-    if (itemsOfInvoice != null) {
-      itemsOfInvoice.forEach((Item element) {
-        _subTotal += element.amount;
-      });
-      updateDifference();
-      notifyListeners();
-    }
   }
 
   Future<void> getAllInvoices() async {
@@ -63,15 +83,61 @@ class InvoiceView with ChangeNotifier {
   void saveDiscount(double discount) {
     _discount = discount;
     updateDifference();
+    countTotal(_itemsOfInvoice);
+    notifyListeners();
+  }
+
+  void getInvoiceById(int invoiceId) async {
+    Invoice res = await DBProvider.db.getInvoiceById(invoiceId);
+    _discount = res.discount;
     notifyListeners();
   }
 
   void updateDifference() {
-    _difference = (_subTotal * _discount) / 100;
-    print('----');
-    print(_subTotal);
-    print(_discount);
-    print(_difference);
+    if (_discount != null) {
+      _difference = (_subTotal * _discount ?? 0) / 100;
+    } else {
+      _difference = 0;
+    }
+    notifyListeners();
+  }
+
+  void countSubtotal(List<Item> itemsOfInvoice) {
+    if (itemsOfInvoice != null) {
+      // start new count each time the invoice has been opened
+      _subTotal = 0;
+      itemsOfInvoice.forEach((Item element) {
+        _subTotal += element.amount;
+      });
+      updateDifference();
+      notifyListeners();
+    }
+  }
+
+  void countTotal(List<Item> itemsOfInvoice) {
+    if (itemsOfInvoice != null) {
+      // start new count each time the invoice has been opened
+      _total = 0;
+      itemsOfInvoice.forEach((Item element) {
+        _total += element.amount;
+      });
+      _total -= _difference;
+      notifyListeners();
+    }
+  }
+
+  void getAllItemsByInvoiceId(int invoiceId) async {
+    List<Item> res = await DBProvider.db.getAllItemsByInvoiceId(invoiceId);
+    if (res != null) {
+      _itemsOfInvoice = res;
+      countSubtotal(_itemsOfInvoice);
+      countTotal(_itemsOfInvoice);
+    }
+    notifyListeners();
+  }
+
+  void selectDate(DateTime selectedDate) async {
+    _date = selectedDate;
     notifyListeners();
   }
 }

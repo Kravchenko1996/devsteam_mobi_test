@@ -3,29 +3,15 @@ import 'package:devsteam_mobi_test/widgets/Discount/DiscountForm.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class DiscountWidget extends StatelessWidget {
-  final GlobalKey discountFormKey;
-  final TextEditingController invoiceDiscount;
-  final TextEditingController invoiceDifference;
+class DiscountWidget extends StatefulWidget {
+  @override
+  _DiscountWidgetState createState() => _DiscountWidgetState();
+}
 
-  // final VoidCallback onSave;
-  final double discount;
-  // final Invoice invoice;
-  final double difference;
-  final double subTotal;
-
-  const DiscountWidget({
-    Key key,
-    this.discountFormKey,
-    this.invoiceDiscount,
-    this.invoiceDifference,
-    // this.onSave,
-    this.discount,
-    // this.invoice,
-    this.difference,
-    this.subTotal,
-  }) : super(key: key);
-
+class _DiscountWidgetState extends State<DiscountWidget> {
+  final _discountFormKey = GlobalKey<FormState>();
+  final TextEditingController _discountController = TextEditingController();
+  final TextEditingController _differenceController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Consumer(
@@ -38,37 +24,35 @@ class DiscountWidget extends StatelessWidget {
         return MaterialButton(
           padding: EdgeInsets.zero,
           onPressed: () {
+            _discountController.text = invoiceView.discount != null
+                ? invoiceView.discount.toString()
+                : '0';
+            _discountController.text = invoiceView.difference != null
+                ? invoiceView.difference.toString()
+                : '0';
             showModalBottomSheet(
-                isScrollControlled: true,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                context: context,
-                builder: (BuildContext context) {
-                  return DiscountForm(
-                    discountFormKey: discountFormKey,
-                    invoiceDiscount: invoiceDiscount,
-                    invoiceDifference: invoiceDifference,
-                    // onSave: onSave,
-                    subTotal: subTotal,
-                  );
-                });
+              isScrollControlled: true,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              context: context,
+              builder: (BuildContext context) {
+                return DiscountForm(
+                  discountFormKey: _discountFormKey,
+                  invoiceDiscount: _discountController,
+                  invoiceDifference: _differenceController,
+                );
+              },
+            );
           },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                // 'Discount (${discount.toStringAsFixed(2)}%)',
                 'Discount ($discount%)',
               ),
               Text(
-                // difference.toStringAsFixed(2),
                 invoiceView.difference.toStringAsFixed(2),
-                // (subTotal == 0
-                //         ? (invoiceView.subTotal * discount) /
-                //             100
-                //         : (subTotal * discount) / 100)
-                //     .toString(),
               ),
             ],
           ),

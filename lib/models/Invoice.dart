@@ -4,7 +4,7 @@ class Invoice {
   final String name;
   double total;
   double discount;
-  double balanceDue;
+  int date;
 
   Invoice({
     this.id,
@@ -12,7 +12,7 @@ class Invoice {
     this.name,
     this.total,
     this.discount,
-    this.balanceDue,
+    this.date,
   });
 
   factory Invoice.fromMap(Map<String, dynamic> json) => Invoice(
@@ -21,7 +21,7 @@ class Invoice {
       name: json['name'],
       total: json['total'],
       discount: json['discount'],
-      balanceDue: json['balance_due']);
+      date: json['date']);
 
   Map<String, dynamic> toMap() => {
         'id': id,
@@ -29,6 +29,6 @@ class Invoice {
         'name': name,
         'total': total,
         'discount': discount,
-        'balance_due': balanceDue,
+        'date': date,
       };
 }

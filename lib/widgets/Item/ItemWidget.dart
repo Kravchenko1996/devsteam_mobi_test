@@ -1,4 +1,3 @@
-import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -11,26 +10,23 @@ class ItemWidget extends StatefulWidget {
   final TextEditingController itemAmount;
   final VoidCallback onSave;
   final int itemId;
-  final List<Item> itemsOfInvoice;
 
-  const ItemWidget(
-      {Key key,
-      this.itemFormKey,
-      this.itemTitle,
-      this.itemPrice,
-      this.itemQuantity,
-      this.itemAmount,
-      this.onSave,
-      this.itemId,
-      this.itemsOfInvoice})
-      : super(key: key);
+  const ItemWidget({
+    Key key,
+    this.itemFormKey,
+    this.itemTitle,
+    this.itemPrice,
+    this.itemQuantity,
+    this.itemAmount,
+    this.onSave,
+    this.itemId,
+  }) : super(key: key);
 
   @override
   _ItemWidgetState createState() => _ItemWidgetState();
 }
 
 class _ItemWidgetState extends State<ItemWidget> {
-
   @override
   Widget build(BuildContext context) {
     return MaterialButton(
@@ -51,7 +47,6 @@ class _ItemWidgetState extends State<ItemWidget> {
               itemPrice: widget.itemPrice,
               itemQuantity: widget.itemQuantity,
               itemAmount: widget.itemAmount,
-              itemsOfInvoice: widget.itemsOfInvoice,
               toCreate: true,
             ),
           ),
