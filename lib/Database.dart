@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:devsteam_mobi_test/models/Client.dart';
+import 'package:devsteam_mobi_test/models/Company.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/models/Payment.dart';
 import 'package:path/path.dart';
@@ -27,6 +28,17 @@ class DBProvider {
     return await openDatabase(path, version: 1, onOpen: (db) {},
         onCreate: (Database db, int version) async {
       await db.execute("""
+          CREATE TABLE Company (
+            id INTEGER PRIMARY KEY,
+            logo TEXT,
+            name TEXT NOT NULL,
+            phone INTEGER,
+            mobile INTEGER,
+            address TEXT,
+            email TEXT,
+            website TEXT
+      )""");
+      await db.execute("""
           CREATE TABLE Clients (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
@@ -39,8 +51,13 @@ class DBProvider {
             total REAL,
             discount REAL,
             date INTEGER,
+            due_date STRING,
+            due_option STRING,
             client_id INTEGER,
+            company_id INTEGER,
             FOREIGN KEY (client_id) REFERENCES Clients (id)
+              ON DELETE NO ACTION ON UPDATE NO ACTION,
+            FOREIGN KEY (company_id) REFERENCES Company (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION    
       )""");
       await db.execute("""
@@ -66,7 +83,46 @@ class DBProvider {
     });
   }
 
-  //CLIENTS
+  // COMPANY
+
+  Future<Company> upsertCompany(Company company) async {
+    final db = await database;
+    if (company.id == null) {
+      company.id = await db.insert("Company", company.toMap());
+    } else {
+      await db.update(
+        "Company",
+        company.toMap(),
+        where: "id = ?",
+        whereArgs: [company.id],
+      );
+    }
+    getAllCompanies();
+    print(company.toMap());
+    return company;
+  }
+
+  getCompanyById(int id) async {
+    final db = await database;
+    var res = await db.query(
+      "Company",
+      where: "id = ?",
+      whereArgs: [id],
+    );
+    return res.isNotEmpty ? Company.fromMap(res.first) : null;
+  }
+
+  getAllCompanies() async {
+    final db = await database;
+    var res = await db.query("Company");
+    List<Company> companies =
+    res.isNotEmpty ? res.map((e) => Company.fromMap(e)).toList() : [];
+    print(companies);
+    return companies;
+  }
+
+
+  // CLIENTS
 
   Future<Client> upsertClient(
     Client client,
@@ -124,7 +180,7 @@ class DBProvider {
     }
   }
 
-  //INVOICES
+  // INVOICES
 
   Future<Invoice> upsertInvoice(
     Invoice invoice,
@@ -132,20 +188,19 @@ class DBProvider {
     double discount,
     double total,
     int date,
+    String dueDate,
+    String dueOption,
   ) async {
     final db = await database;
     if (invoice.id == null) {
-      if (clientId != null) {
-        invoice.clientId = clientId;
-        invoice.id = await db.insert("invoices", invoice.toMap());
-      } else {
-        invoice.id = await db.insert("invoices", invoice.toMap());
-      }
+      invoice.id = await db.insert("invoices", invoice.toMap());
     } else {
       invoice.clientId = clientId;
       invoice.discount = discount;
       invoice.total = total;
       invoice.date = date;
+      invoice.dueDate = dueDate;
+      invoice.dueOption = dueOption;
       await db.update(
         "Invoices",
         invoice.toMap(),
@@ -174,7 +229,7 @@ class DBProvider {
     return invoices;
   }
 
-// ITEMS
+  // ITEMS
 
   Future<Item> upsertItem(
     Item item,

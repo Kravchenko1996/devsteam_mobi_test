@@ -59,15 +59,48 @@ class InvoiceView with ChangeNotifier {
     _date = value;
   }
 
+  List<String> dueOptions = [
+    'Due on receipt',
+    'Due next day',
+    'Due in 7 days',
+    'Due in 30 days',
+    'Custom date',
+  ];
+
+  String _dueOption;
+
+  String get dueOption => _dueOption;
+
+  set setDueOption(String value) {
+    _dueOption = value;
+  }
+
+  String _dueDate;
+
+  String get dueDate => _dueDate;
+
+  set setDueDate(String value) {
+    _dueDate = value;
+  }
+
   Future<Invoice> saveInvoice(
     Invoice invoice,
     int clientId,
     double discount,
     double total,
     int date,
+    String dueDate,
+    String dueOption,
   ) async {
-    Invoice res = await DBProvider.db
-        .upsertInvoice(invoice, clientId, discount, total, date);
+    Invoice res = await DBProvider.db.upsertInvoice(
+      invoice,
+      clientId,
+      discount,
+      total,
+      date,
+      dueDate,
+      dueOption,
+    );
     getAllInvoices();
     _total = total;
     notifyListeners();
@@ -90,6 +123,9 @@ class InvoiceView with ChangeNotifier {
   void getInvoiceById(int invoiceId) async {
     Invoice res = await DBProvider.db.getInvoiceById(invoiceId);
     _discount = res.discount;
+    _date = DateTime.fromMillisecondsSinceEpoch(res.date);
+    _dueDate = res.dueDate;
+    _dueOption = res.dueOption;
     notifyListeners();
   }
 
@@ -138,6 +174,39 @@ class InvoiceView with ChangeNotifier {
 
   void selectDate(DateTime selectedDate) async {
     _date = selectedDate;
+    notifyListeners();
+  }
+
+  void selectDueOption(
+      String selectedDueOption,
+      BuildContext context,
+      ) async {
+    DateTime today = DateTime.now();
+    DateTime _tmpDate;
+    if (selectedDueOption == 'Due on receipt') {
+      _dueDate = 'Due on receipt';
+    } else if (selectedDueOption == 'Due next day') {
+      _tmpDate = today.add(
+        Duration(days: 1),
+      );
+    } else if (selectedDueOption == 'Due in 7 days') {
+      _tmpDate = today.add(
+        Duration(days: 7),
+      );
+    } else if (selectedDueOption == 'Due in 30 days') {
+      _tmpDate = today.add(
+        Duration(days: 30),
+      );
+    }
+    if (_tmpDate != null) {
+      _dueDate = _tmpDate.toIso8601String();
+    }
+    _dueOption = selectedDueOption;
+    notifyListeners();
+  }
+
+  void setDueDateByDatePicker(DateTime pickedDate) {
+    _dueDate = pickedDate.toIso8601String();
     notifyListeners();
   }
 }

@@ -14,7 +14,6 @@ class InvoicesPage extends StatefulWidget {
 }
 
 class _InvoicesPageState extends State<InvoicesPage> {
-
   @override
   void initState() {
     super.initState();
@@ -57,27 +56,24 @@ class _InvoicesPageState extends State<InvoicesPage> {
                             );
                           },
                           child: Container(
-                            child: Container(
-                              margin: EdgeInsets.symmetric(
-                                vertical: 10,
-                              ),
-                              child: Column(
-                                children: [
-                                  _buildClientInfo(
-                                      invoiceView.invoices[index].clientId),
-                                  Center(
-                                    child: Text(
-                                      '${invoiceView.invoices[index].name}',
-                                      style: TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 20,
-                                      ),
+                            margin: EdgeInsets.symmetric(
+                              vertical: 10,
+                            ),
+                            child: Column(
+                              children: [
+                                _buildClientInfo(
+                                    invoiceView.invoices[index].clientId),
+                                Center(
+                                  child: Text(
+                                    '${invoiceView.invoices[index].name}',
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 20,
                                     ),
                                   ),
-                                  _buildItemsInfo(
-                                      invoiceView.invoices[index].id),
-                                ],
-                              ),
+                                ),
+                                _buildItemsInfo(invoiceView.invoices[index].id),
+                              ],
                             ),
                           ),
                         );

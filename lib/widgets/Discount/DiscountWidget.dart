@@ -12,6 +12,7 @@ class _DiscountWidgetState extends State<DiscountWidget> {
   final _discountFormKey = GlobalKey<FormState>();
   final TextEditingController _discountController = TextEditingController();
   final TextEditingController _differenceController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Consumer(
@@ -37,6 +38,9 @@ class _DiscountWidgetState extends State<DiscountWidget> {
               ),
               context: context,
               builder: (BuildContext context) {
+                _discountController.text = discount.toString();
+                _differenceController.text =
+                    invoiceView.difference.toStringAsFixed(2);
                 return DiscountForm(
                   discountFormKey: _discountFormKey,
                   invoiceDiscount: _discountController,

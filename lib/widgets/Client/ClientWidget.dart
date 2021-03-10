@@ -28,23 +28,11 @@ class _ClientWidgetState extends State<ClientWidget> {
   String _getClientById() {
     if (widget.invoice != null && widget.invoice.clientId != null) {
       context.read<ClientView>().getClientById(widget.invoice.clientId);
-      return context.read<ClientView>().getClient != null
-          ? context.read<ClientView>().getClient.name
+      return context.read<ClientView>().client != null
+          ? context.read<ClientView>().client.name
           : '';
     }
     return null;
-  }
-
-  void initState() {
-    super.initState();
-    _initForm();
-  }
-
-  void _initForm() {
-    if (context.read<ClientView>().getClient != null) {
-      _clientNameController.text = context.read<ClientView>().getClient.name;
-      _clientEmailController.text = context.read<ClientView>().getClient.email;
-    }
   }
 
   @override
@@ -60,8 +48,12 @@ class _ClientWidgetState extends State<ClientWidget> {
           onPressed: () async {
             final PermissionStatus permissionStatus = await _getPermission();
             if (permissionStatus == PermissionStatus.granted) {
-              if (_clientNameController.text.isEmpty &&
-                  _getClientById() == null) {
+              if (clientView.client != null) {
+                _clientNameController.text = clientView.client.name;
+                _clientEmailController.text = clientView.client.email;
+              }
+              if (_getClientById() == null &&
+                  _clientNameController.text.isEmpty) {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -73,19 +65,20 @@ class _ClientWidgetState extends State<ClientWidget> {
                 );
               } else {
                 showModalBottomSheet(
-                    isScrollControlled: true,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    context: context,
-                    builder: (BuildContext context) {
-                      return ClientForm(
-                        clientFormKey: _clientFormKey,
-                        clientName: _clientNameController,
-                        clientEmail: _clientEmailController,
-                        invoice: widget.invoice,
-                      );
-                    });
+                  isScrollControlled: true,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  context: context,
+                  builder: (BuildContext context) {
+                    return ClientForm(
+                      clientFormKey: _clientFormKey,
+                      clientName: _clientNameController,
+                      clientEmail: _clientEmailController,
+                      invoice: widget.invoice,
+                    );
+                  },
+                );
               }
             } else {
               showDialog(
@@ -115,9 +108,10 @@ class _ClientWidgetState extends State<ClientWidget> {
                   size: 30,
                 ),
                 Text(
-                  _clientNameController.text.isEmpty
-                      ? 'Client'
-                      : _clientNameController.text,
+                  // _clientNameController.text.isEmpty
+                  //     ? 'Client'
+                  //     : _clientNameController.text,
+                  clientView.client != null ? clientView.client.name : 'Client',
                   style: TextStyle(
                     color: Colors.grey,
                   ),

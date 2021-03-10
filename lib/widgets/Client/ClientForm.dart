@@ -57,8 +57,8 @@ class _ClientFormState extends State<ClientForm> {
                               Client(
                                 name: widget.clientName.text,
                               ),
-                              context.read<ClientView>().getClient != null
-                                  ? context.read<ClientView>().getClient.id
+                              context.read<ClientView>().client != null
+                                  ? context.read<ClientView>().client.id
                                   : null);
                           Navigator.of(context).pop();
                         },

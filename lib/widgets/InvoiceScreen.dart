@@ -6,8 +6,10 @@ import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/item.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ClientWidget.dart';
+import 'package:devsteam_mobi_test/widgets/Company/CompanyWidget.dart';
 import 'package:devsteam_mobi_test/widgets/DatePicker/DatePickerWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Discount/DiscountWidget.dart';
+import 'package:devsteam_mobi_test/widgets/DueWidget.dart';
 import 'package:devsteam_mobi_test/widgets/InvoiceNameWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemScreen.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemWidget.dart';
@@ -44,21 +46,27 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     super.initState();
     InvoiceView invoiceView = Provider.of<InvoiceView>(context, listen: false);
     PaymentView paymentView = Provider.of<PaymentView>(context, listen: false);
+    ClientView clientView = Provider.of<ClientView>(context, listen: false);
     if (widget.invoice != null) {
       _getInvoiceById(widget.invoice.id, invoiceView);
       _getAllItemsByInvoiceId(widget.invoice.id, invoiceView);
       _getAllPaymentsByInvoiceId(widget.invoice.id, paymentView);
+      if (widget.invoice.clientId != null) {
+        _getClientById(widget.invoice.clientId, clientView);
+      }
     }
     invoiceView.setSubTotal = 0;
     invoiceView.setTotal = 0;
     invoiceView.setDiscount = 0;
     invoiceView.setDifference = 0;
     invoiceView.setItemsOfInvoice = [];
-    // ToDo reset date in new Invoice
-    invoiceView.setDate = DateTime.now();
     paymentView.setPaymentsOfInvoice = [];
     paymentView.setBalanceDue = 0;
     paymentView.setPaymentsSum = 0;
+    invoiceView.setDate = DateTime.now();
+    invoiceView.setDueOption = invoiceView.dueOptions.first;
+    invoiceView.setDueDate = invoiceView.dueOptions.first;
+    clientView.setClient = null;
   }
 
   void _getAllItemsByInvoiceId(
@@ -78,8 +86,15 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   void _getInvoiceById(
     int invoiceId,
     InvoiceView invoiceView,
-  ) {
+  ) async {
     invoiceView.getInvoiceById(invoiceId);
+  }
+
+  void _getClientById(
+    int clientId,
+    ClientView clientView,
+  ) async {
+    clientView.getClientById(clientId);
   }
 
   @override
@@ -121,15 +136,28 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                         onPressed: () async {
                           Invoice newInvoice = Invoice(
                             name: _invoiceNameController.text,
+                            clientId:
+                                context.read<ClientView>().client != null
+                                    ? context.read<ClientView>().client.id
+                                    : null,
+                            discount: invoiceView.discount ?? 0,
+                            total:
+                                invoiceView.subTotal - invoiceView.difference ??
+                                    0,
+                            date: invoiceView.date.millisecondsSinceEpoch,
+                            dueDate: invoiceView.dueDate,
+                            dueOption: invoiceView.dueOption,
                           );
                           Invoice invoice = await invoiceView.saveInvoice(
                             widget.invoice ?? newInvoice,
-                            context.read<ClientView>().getClient != null
-                                ? context.read<ClientView>().getClient.id
+                            context.read<ClientView>().client != null
+                                ? context.read<ClientView>().client.id
                                 : null,
                             invoiceView.discount,
                             invoiceView.subTotal - invoiceView.difference,
-                              invoiceView.date.millisecondsSinceEpoch
+                            invoiceView.date.millisecondsSinceEpoch,
+                            invoiceView.dueDate,
+                            invoiceView.dueOption,
                           );
                           if (invoiceView.itemsOfInvoice != null) {
                             invoiceView.itemsOfInvoice.forEach(
@@ -190,8 +218,12 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   ) {
     return Column(
       children: [
-        DatePickerWidget(
-          invoice: widget.invoice,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            DatePickerWidget(),
+            DueWidget(),
+          ],
         ),
         ClientWidget(
           invoice: widget.invoice,
@@ -220,6 +252,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         buildRow(
           'Balance due',
           (invoiceView.total - paymentView.paymentsSum).toString(),
+        ),
+        CompanyWidget(
+          invoice: widget.invoice,
         ),
       ],
     );

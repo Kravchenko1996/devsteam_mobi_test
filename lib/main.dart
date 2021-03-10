@@ -1,4 +1,5 @@
 import 'package:devsteam_mobi_test/viewmodels/client.dart';
+import 'package:devsteam_mobi_test/viewmodels/company.dart';
 import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/item.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
@@ -26,6 +27,9 @@ void initApp() {
         ),
         ChangeNotifierProvider<PaymentView>(
           create: (_) => PaymentView(),
+        ),
+        ChangeNotifierProvider<CompanyView>(
+          create: (_) => CompanyView(),
         ),
       ],
       child: MyApp(),

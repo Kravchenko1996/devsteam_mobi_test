@@ -5,7 +5,10 @@ import 'package:flutter/material.dart';
 class ClientView with ChangeNotifier {
   Client _client;
 
-  Client get getClient => _client;
+  Client get client => _client;
+  set setClient(Client value) {
+    _client = value;
+  }
 
   void getClientById(int clientId) async {
     var res = await DBProvider.db.getClientById(clientId);
@@ -17,11 +20,13 @@ class ClientView with ChangeNotifier {
     Client client,
     int clientId,
   ) async {
-    await DBProvider.db.upsertClient(
+    var res = await DBProvider.db.upsertClient(
       client,
       clientId,
     );
-    getClientById(clientId);
+    _client = res;
+    notifyListeners();
+    // getClientById(clientId);
   }
 
   void selectClient(Client selectedClient) {

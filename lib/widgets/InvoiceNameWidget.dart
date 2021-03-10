@@ -19,6 +19,7 @@ class InvoiceNameWidget extends StatelessWidget {
               border: InputBorder.none,
               hintText: 'Enter invoice name',
             ),
+            autofocus: false,
             controller: invoiceName,
             validator: (val) {
               if (val.isEmpty) {
