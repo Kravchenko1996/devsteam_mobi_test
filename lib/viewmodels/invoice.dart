@@ -178,9 +178,9 @@ class InvoiceView with ChangeNotifier {
   }
 
   void selectDueOption(
-      String selectedDueOption,
-      BuildContext context,
-      ) async {
+    String selectedDueOption,
+    BuildContext context,
+  ) async {
     DateTime today = DateTime.now();
     DateTime _tmpDate;
     if (selectedDueOption == 'Due on receipt') {

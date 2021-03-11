@@ -21,6 +21,7 @@ dependencies:
   provider: ^4.3.3
   intl: 0.16.1
   image_picker: ^0.6.6+5
+  syncfusion_flutter_signaturepad: ^18.4.47-beta
 
 dev_dependencies:
   flutter_test:

@@ -1,27 +1,25 @@
-import 'dart:io';
-
 import 'package:devsteam_mobi_test/Database.dart';
 import 'package:devsteam_mobi_test/models/Company.dart';
 import 'package:flutter/material.dart';
 
 class CompanyView with ChangeNotifier {
-  File _logo;
+  String _logo;
 
-  File get logo => _logo;
-
-  set setLogo(File value) {
-    _logo = value;
-  }
+  String get logo => _logo;
 
   Company _company;
 
   Company get company => _company;
 
+  List<Company> _companies = [];
+
+  List<Company> get companies => _companies;
+
   set setCompany(Company value) {
     _company = value;
   }
 
-  void chooseLogo(File image) async {
+  void chooseLogo(String image) async {
     _logo = image;
     notifyListeners();
   }
@@ -32,11 +30,12 @@ class CompanyView with ChangeNotifier {
     notifyListeners();
   }
 
-  void getCompanyById(int id) async {
-    Company res = await DBProvider.db.getCompanyById(id);
-    print('--');
-    print(res);
-    _company = res;
+  void getAllCompanies() async {
+    List<Company> res = await DBProvider.db.getAllCompanies();
+    if (res.length != 0) {
+      _company = res.first;
+      _logo = res.first.logo;
+    }
     notifyListeners();
   }
 }

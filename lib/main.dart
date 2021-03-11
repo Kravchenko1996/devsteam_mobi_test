@@ -3,6 +3,7 @@ import 'package:devsteam_mobi_test/viewmodels/company.dart';
 import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/item.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
+import 'package:devsteam_mobi_test/viewmodels/photo.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -30,6 +31,9 @@ void initApp() {
         ),
         ChangeNotifierProvider<CompanyView>(
           create: (_) => CompanyView(),
+        ),
+        ChangeNotifierProvider<PhotoView>(
+          create: (_) => PhotoView(),
         ),
       ],
       child: MyApp(),

@@ -1,24 +1,16 @@
-import 'package:devsteam_mobi_test/models/Invoice.dart';
-import 'package:devsteam_mobi_test/viewmodels/company.dart';
-import 'package:devsteam_mobi_test/widgets/Company/CompanyScreen.dart';
+import 'package:devsteam_mobi_test/viewmodels/photo.dart';
+import 'package:devsteam_mobi_test/widgets/Photo/PhotosScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 
-class CompanyWidget extends StatelessWidget {
-  final Invoice invoice;
-
-  const CompanyWidget({
-    Key key,
-    this.invoice,
-  }) : super(key: key);
-
+class AddPhotoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer(
       builder: (
-        BuildContext companyContext,
-        CompanyView companyView,
+        BuildContext photoContext,
+        PhotoView photoView,
         Widget child,
       ) {
         return MaterialButton(
@@ -30,9 +22,7 @@ class CompanyWidget extends StatelessWidget {
                 builder: (
                   context,
                 ) {
-                  return CompanyScreen(
-                    toEdit: true,
-                  );
+                  return PhotosScreen();
                 },
               ),
             );
@@ -40,14 +30,16 @@ class CompanyWidget extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                MdiIcons.domain,
+                MdiIcons.image,
                 color: Colors.grey,
                 size: 30,
               ),
               Text(
-                companyView.company != null
-                    ? companyView.company.name
-                    : 'Company',
+                photoView.photosOfInvoice.length == 0
+                    ? 'Add photo'
+                    : photoView.photosOfInvoice.length == 1
+                      ? '${photoView.photosOfInvoice.length} photo'
+                      : '${photoView.photosOfInvoice.length} photos',
               ),
             ],
           ),

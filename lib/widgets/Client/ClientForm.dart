@@ -26,108 +26,111 @@ class ClientForm extends StatefulWidget {
 class _ClientFormState extends State<ClientForm> {
   @override
   Widget build(BuildContext context) {
-    return Consumer<ClientView>(builder: (
-      BuildContext clientContext,
-      ClientView clientView,
-      Widget child,
-    ) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: EdgeInsets.only(
-              left: 15,
-              top: 15,
-              right: 15,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 15,
-            ),
-            child: Form(
-              key: widget.clientFormKey,
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Client'),
-                      RaisedButton(
-                        child: Text('Save'),
-                        onPressed: () async {
-                          clientView.saveClient(
-                              Client(
-                                name: widget.clientName.text,
-                              ),
-                              context.read<ClientView>().client != null
-                                  ? context.read<ClientView>().client.id
-                                  : null);
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  ),
-                  Container(
-                    child: TextFormField(
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Enter client name',
-                      ),
-                      controller: widget.clientName,
-                      validator: (val) {
-                        if (val.isEmpty) {
-                          return 'Enter something please!';
-                        }
-                        return null;
-                      },
+    return Consumer<ClientView>(
+      builder: (
+        BuildContext clientContext,
+        ClientView clientView,
+        Widget child,
+      ) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.only(
+                left: 15,
+                top: 15,
+                right: 15,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 15,
+              ),
+              child: Form(
+                key: widget.clientFormKey,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Client'),
+                        RaisedButton(
+                          child: Text('Save'),
+                          onPressed: () async {
+                            clientView.saveClient(
+                                Client(
+                                  name: widget.clientName.text,
+                                ),
+                                context.read<ClientView>().client != null
+                                    ? context.read<ClientView>().client.id
+                                    : null);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
                     ),
-                  ),
-                  Container(
-                    child: TextFormField(
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Enter client email',
+                    Container(
+                      child: TextFormField(
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Enter client name',
+                        ),
+                        controller: widget.clientName,
+                        validator: (val) {
+                          if (val.isEmpty) {
+                            return 'Enter something please!';
+                          }
+                          return null;
+                        },
                       ),
-                      controller: widget.clientEmail,
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      RaisedButton(
-                        onPressed: () {
-                          clientView.removeClientFromInvoice(widget.invoice.id);
-                          setState(() {
-                            widget.clientName.text = '';
-                            widget.clientEmail.text = '';
-                          });
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('Delete'),
+                    Container(
+                      child: TextFormField(
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Enter client email',
+                        ),
+                        controller: widget.clientEmail,
                       ),
-                      RaisedButton(
-                        onPressed: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ContactsScreen(
-                                clientName: widget.clientName,
-                                clientEmail: widget.clientEmail,
-                                // onChoose: _selectClientFromList,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        RaisedButton(
+                          onPressed: () {
+                            clientView
+                                .removeClientFromInvoice(widget.invoice.id);
+                            setState(() {
+                              widget.clientName.text = '';
+                              widget.clientEmail.text = '';
+                            });
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Delete'),
+                        ),
+                        RaisedButton(
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ContactsScreen(
+                                  clientName: widget.clientName,
+                                  clientEmail: widget.clientEmail,
+                                  // onChoose: _selectClientFromList,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                        child: Text('All clients'),
-                      ),
-                    ],
-                  ),
-                ],
+                            );
+                          },
+                          child: Text('All clients'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      );
-    });
+          ],
+        );
+      },
+    );
   }
 }

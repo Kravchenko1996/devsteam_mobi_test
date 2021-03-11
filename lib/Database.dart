@@ -4,6 +4,7 @@ import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/models/Company.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/models/Payment.dart';
+import 'package:devsteam_mobi_test/models/Photo.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -80,47 +81,16 @@ class DBProvider {
             FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION  
       )""");
+      await db.execute("""
+          CREATE TABLE Photos (
+            id INTEGER PRIMARY KEY,
+            file TEXT NOT NULL,
+            invoice_id INTEGER,
+            FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
+              ON DELETE NO ACTION ON UPDATE NO ACTION  
+      )""");
     });
   }
-
-  // COMPANY
-
-  Future<Company> upsertCompany(Company company) async {
-    final db = await database;
-    if (company.id == null) {
-      company.id = await db.insert("Company", company.toMap());
-    } else {
-      await db.update(
-        "Company",
-        company.toMap(),
-        where: "id = ?",
-        whereArgs: [company.id],
-      );
-    }
-    getAllCompanies();
-    print(company.toMap());
-    return company;
-  }
-
-  getCompanyById(int id) async {
-    final db = await database;
-    var res = await db.query(
-      "Company",
-      where: "id = ?",
-      whereArgs: [id],
-    );
-    return res.isNotEmpty ? Company.fromMap(res.first) : null;
-  }
-
-  getAllCompanies() async {
-    final db = await database;
-    var res = await db.query("Company");
-    List<Company> companies =
-    res.isNotEmpty ? res.map((e) => Company.fromMap(e)).toList() : [];
-    print(companies);
-    return companies;
-  }
-
 
   // CLIENTS
 
@@ -337,5 +307,70 @@ class DBProvider {
       where: "id = ?",
       whereArgs: [id],
     );
+  }
+
+  // PHOTOS
+
+  Future<Photo> upsertPhoto(Photo photo) async {
+    final db = await database;
+    if (photo.id == null) {
+      photo.id = await db.insert("Photos", photo.toMap());
+    }
+    return photo;
+  }
+
+  getAllPhotosByInvoiceId(int invoiceId) async {
+    final db = await database;
+    var res = await db.query(
+      "Photos",
+      where: "invoice_id = ?",
+      whereArgs: [invoiceId],
+    );
+    return res.isNotEmpty ? res.map((e) => Photo.fromMap(e)).toList() : null;
+  }
+
+  deletePhoto(int id) async {
+    final db = await database;
+    db.delete(
+      "Photos",
+      where: "id = ?",
+      whereArgs: [id],
+    );
+  }
+
+  // COMPANY
+
+  Future<Company> upsertCompany(Company company) async {
+    final db = await database;
+    if (company.id == null) {
+      company.id = await db.insert("Company", company.toMap());
+    } else {
+      await db.update(
+        "Company",
+        company.toMap(),
+        where: "id = ?",
+        whereArgs: [company.id],
+      );
+    }
+    getAllCompanies();
+    return company;
+  }
+
+  getCompanyById(int id) async {
+    final db = await database;
+    var res = await db.query(
+      "Company",
+      where: "id = ?",
+      whereArgs: [id],
+    );
+    return res.isNotEmpty ? Company.fromMap(res.first) : null;
+  }
+
+  getAllCompanies() async {
+    final db = await database;
+    var res = await db.query("Company");
+    List<Company> companies =
+    res.isNotEmpty ? res.map((e) => Company.fromMap(e)).toList() : [];
+    return companies;
   }
 }

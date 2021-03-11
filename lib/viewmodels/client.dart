@@ -26,7 +26,6 @@ class ClientView with ChangeNotifier {
     );
     _client = res;
     notifyListeners();
-    // getClientById(clientId);
   }
 
   void selectClient(Client selectedClient) {
