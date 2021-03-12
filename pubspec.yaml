@@ -22,6 +22,8 @@ dependencies:
   intl: 0.16.1
   image_picker: ^0.6.6+5
   syncfusion_flutter_signaturepad: ^18.4.47-beta
+  printing: 4.1.0
+  pdf: ^2.1.0
 
 dev_dependencies:
   flutter_test:

@@ -52,8 +52,10 @@ class DBProvider {
             total REAL,
             discount REAL,
             date INTEGER,
-            due_date STRING,
-            due_option STRING,
+            due_date TEXT,
+            due_option TEXT,
+            signature TEXT,
+            comment TEXT,
             client_id INTEGER,
             company_id INTEGER,
             FOREIGN KEY (client_id) REFERENCES Clients (id)
@@ -160,6 +162,8 @@ class DBProvider {
     int date,
     String dueDate,
     String dueOption,
+    String signature,
+    String comment,
   ) async {
     final db = await database;
     if (invoice.id == null) {
@@ -171,6 +175,8 @@ class DBProvider {
       invoice.date = date;
       invoice.dueDate = dueDate;
       invoice.dueOption = dueOption;
+      invoice.signature = signature;
+      invoice.comment = comment;
       await db.update(
         "Invoices",
         invoice.toMap(),
@@ -370,7 +376,7 @@ class DBProvider {
     final db = await database;
     var res = await db.query("Company");
     List<Company> companies =
-    res.isNotEmpty ? res.map((e) => Company.fromMap(e)).toList() : [];
+        res.isNotEmpty ? res.map((e) => Company.fromMap(e)).toList() : [];
     return companies;
   }
 }

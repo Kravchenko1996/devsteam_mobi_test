@@ -9,6 +9,7 @@ import 'package:devsteam_mobi_test/viewmodels/item.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
 import 'package:devsteam_mobi_test/viewmodels/photo.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ClientWidget.dart';
+import 'package:devsteam_mobi_test/widgets/Comment/CommentWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Company/CompanyWidget.dart';
 import 'package:devsteam_mobi_test/widgets/DatePicker/DatePickerWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Discount/DiscountWidget.dart';
@@ -17,6 +18,7 @@ import 'package:devsteam_mobi_test/widgets/InvoiceNameWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemScreen.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Payment/PaidWidget.dart';
+import 'package:devsteam_mobi_test/widgets/Pdf/PdfWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Photo/AddPhotoWidget.dart';
 import 'package:devsteam_mobi_test/widgets/RowWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Signature/AddSignatureWidget.dart';
@@ -39,12 +41,14 @@ class InvoiceScreen extends StatefulWidget {
 class _InvoiceScreenState extends State<InvoiceScreen> {
   final _invoiceFormKey = GlobalKey<FormState>();
   final _itemFormKey = GlobalKey<FormState>();
+  final _commentFormKey = GlobalKey<FormState>();
 
   final TextEditingController _invoiceNameController = TextEditingController();
   final TextEditingController _itemTitleController = TextEditingController();
   final TextEditingController _itemPriceController = TextEditingController();
   final TextEditingController _itemQuantityController = TextEditingController();
   final TextEditingController _itemAmountController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
 
   @override
   void initState() {
@@ -60,6 +64,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
       _getAllItemsByInvoiceId(widget.invoice.id, invoiceView);
       _getAllPaymentsByInvoiceId(widget.invoice.id, paymentView);
       _getAllPhotosByInvoiceId(widget.invoice.id, photoView);
+      if (widget.invoice.comment != null) {
+        _commentController.text = widget.invoice.comment;
+      }
       if (widget.invoice.clientId != null) {
         _getClientById(widget.invoice.clientId, clientView);
       }
@@ -77,6 +84,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     invoiceView.setDueDate = invoiceView.dueOptions.first;
     clientView.setClient = null;
     photoView.setPhotosOfInvoice = [];
+    invoiceView.setSignature = null;
   }
 
   void _getAllItemsByInvoiceId(
@@ -161,78 +169,24 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                         actions: [
                           MaterialButton(
                             onPressed: () async {
-                              Invoice newInvoice = Invoice(
-                                name: _invoiceNameController.text,
-                                clientId:
-                                    context.read<ClientView>().client != null
-                                        ? context.read<ClientView>().client.id
-                                        : null,
-                                discount: invoiceView.discount ?? 0,
-                                total: invoiceView.subTotal -
-                                        invoiceView.difference ??
-                                    0,
-                                date: invoiceView.date.millisecondsSinceEpoch,
-                                dueDate: invoiceView.dueDate,
-                                dueOption: invoiceView.dueOption,
-                                companyId: context.read<CompanyView>().company.id
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PdfWidget(
+                                    invoice: widget.invoice ?? null,
+                                  ),
+                                ),
                               );
-                              Invoice invoice = await invoiceView.saveInvoice(
-                                widget.invoice ?? newInvoice,
-                                context.read<ClientView>().client != null
-                                    ? context.read<ClientView>().client.id
-                                    : null,
-                                invoiceView.discount,
-                                invoiceView.subTotal - invoiceView.difference,
-                                invoiceView.date.millisecondsSinceEpoch,
-                                invoiceView.dueDate,
-                                invoiceView.dueOption,
-                              );
-                              if (invoiceView.itemsOfInvoice != null) {
-                                invoiceView.itemsOfInvoice.forEach(
-                                  (Item item) async {
-                                    if (item.invoiceId == null) {
-                                      itemView.saveItem(
-                                        item,
-                                        widget.invoice != null
-                                            ? widget.invoice.id
-                                            : invoice.id,
-                                      );
-                                    }
-                                  },
-                                );
-                              }
-                              if (paymentView.paymentsOfInvoice.length != 0) {
-                                paymentView.paymentsOfInvoice.forEach(
-                                  (Payment payment) async {
-                                    if (payment.invoiceId == null) {
-                                      paymentView.savePayment(
-                                        payment,
-                                        widget.invoice != null
-                                            ? widget.invoice.id
-                                            : invoice.id,
-                                      );
-                                    }
-                                  },
-                                );
-                              }
-                              if (photoView.photosOfInvoice.length != 0) {
-                                photoView.photosOfInvoice.forEach(
-                                  (Photo photo) async {
-                                    photoView.savePhoto(
-                                      Photo(
-                                        id: photo.id ?? null,
-                                        file: photo.file,
-                                        invoiceId: widget.invoice != null
-                                            ? widget.invoice.id
-                                            : invoice.id,
-                                      ),
-                                    );
-                                  },
-                                );
-                              }
-                              Navigator.of(context).pop();
                             },
-                            child: Text('Save'),
+                            child: Text(
+                              'Preview',
+                            ),
+                          ),
+                          _submitInvoice(
+                            itemView,
+                            invoiceView,
+                            paymentView,
+                            photoView,
                           ),
                         ],
                       ),
@@ -241,8 +195,11 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                           margin: EdgeInsets.symmetric(horizontal: 15),
                           child: SingleChildScrollView(
                             physics: ScrollPhysics(),
-                            child:
-                                _buildBody(itemView, invoiceView, paymentView),
+                            child: _buildBody(
+                              itemView,
+                              invoiceView,
+                              paymentView,
+                            ),
                           ),
                         ),
                       ),
@@ -254,6 +211,84 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _submitInvoice(
+    ItemView itemView,
+    InvoiceView invoiceView,
+    PaymentView paymentView,
+    PhotoView photoView,
+  ) {
+    return MaterialButton(
+      onPressed: () async {
+        Invoice newInvoice = Invoice(
+          name: _invoiceNameController.text,
+          clientId: context.read<ClientView>().client != null
+              ? context.read<ClientView>().client.id
+              : null,
+          discount: invoiceView.discount ?? 0,
+          total: invoiceView.subTotal - invoiceView.difference ?? 0,
+          date: invoiceView.date.millisecondsSinceEpoch,
+          dueDate: invoiceView.dueDate,
+          dueOption: invoiceView.dueOption,
+          companyId: context.read<CompanyView>().company.id,
+          signature: invoiceView.signature,
+        );
+        Invoice invoice = await invoiceView.saveInvoice(
+          widget.invoice ?? newInvoice,
+          context.read<ClientView>().client != null
+              ? context.read<ClientView>().client.id
+              : null,
+          invoiceView.discount,
+          invoiceView.subTotal - invoiceView.difference,
+          invoiceView.date.millisecondsSinceEpoch,
+          invoiceView.dueDate,
+          invoiceView.dueOption,
+          invoiceView.signature,
+          _commentController.text,
+        );
+        if (invoiceView.itemsOfInvoice.length != 0) {
+          invoiceView.itemsOfInvoice.forEach(
+            (Item item) async {
+              if (item.invoiceId == null) {
+                itemView.saveItem(
+                  item,
+                  widget.invoice != null ? widget.invoice.id : invoice.id,
+                );
+              }
+            },
+          );
+        }
+        if (paymentView.paymentsOfInvoice.length != 0) {
+          paymentView.paymentsOfInvoice.forEach(
+            (Payment payment) async {
+              if (payment.invoiceId == null) {
+                paymentView.savePayment(
+                  payment,
+                  widget.invoice != null ? widget.invoice.id : invoice.id,
+                );
+              }
+            },
+          );
+        }
+        if (photoView.photosOfInvoice.length != 0) {
+          photoView.photosOfInvoice.forEach(
+            (Photo photo) async {
+              photoView.savePhoto(
+                Photo(
+                  id: photo.id ?? null,
+                  file: photo.file,
+                  invoiceId:
+                      widget.invoice != null ? widget.invoice.id : invoice.id,
+                ),
+              );
+            },
+          );
+        }
+        Navigator.of(context).pop();
+      },
+      child: Text('Save'),
     );
   }
 
@@ -299,11 +334,13 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           'Balance due',
           (invoiceView.total - paymentView.paymentsSum).toString(),
         ),
-        CompanyWidget(
-          invoice: widget.invoice,
+        CompanyWidget(),
+        PhotoWidget(),
+        SignatureWidget(),
+        CommentWidget(
+          commentFormKey: _commentFormKey,
+          comment: _commentController,
         ),
-        AddPhotoWidget(),
-        AddSignatureWidget(),
       ],
     );
   }

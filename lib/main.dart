@@ -44,14 +44,24 @@ void initApp() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Devsteam.mobi',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    // Remove focus from all fields by tap outside
+    return Listener(
+      onPointerDown: (_) {
+        FocusScopeNode currentFocus = FocusScope.of(context);
+        if (!currentFocus.hasPrimaryFocus &&
+            currentFocus.focusedChild != null) {
+          currentFocus.focusedChild.unfocus();
+        }
+      },
+      child: MaterialApp(
+        title: 'Devsteam.mobi',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: HomePage(),
       ),
-      home: HomePage(),
     );
   }
 }

@@ -8,6 +8,8 @@ class Invoice {
   String dueDate;
   String dueOption;
   int companyId;
+  String signature;
+  String comment;
 
   Invoice({
     this.id,
@@ -19,6 +21,8 @@ class Invoice {
     this.dueDate,
     this.dueOption,
     this.companyId,
+    this.signature,
+    this.comment,
   });
 
   factory Invoice.fromMap(Map<String, dynamic> json) => Invoice(
@@ -31,6 +35,8 @@ class Invoice {
         dueDate: json['due_date'],
         dueOption: json['due_option'],
         companyId: json['company_id'],
+        signature: json['signature'],
+        comment: json['comment'],
       );
 
   Map<String, dynamic> toMap() => {
@@ -43,5 +49,7 @@ class Invoice {
         'due_date': dueDate,
         'due_option': dueOption,
         'company_id': companyId,
+        'signature': signature,
+        'comment': comment,
       };
 }

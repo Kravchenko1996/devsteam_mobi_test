@@ -33,6 +33,7 @@ class InvoiceNameWidget extends StatelessWidget {
               border: InputBorder.none,
               hintText: 'Enter invoice name',
             ),
+            // ToDo rework invoiceName
             // if 'widget.invoice == null' would be here
             // it will conflict with ..text-method
             controller: invoiceName..text = invoice.name,

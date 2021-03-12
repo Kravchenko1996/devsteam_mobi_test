@@ -83,7 +83,7 @@ class _PhotoPickerWidgetState extends State<PhotoPickerWidget> {
           return SafeArea(
             child: Container(
               child: Wrap(
-                children: <Widget>[
+                children: [
                   ListTile(
                       leading: Icon(Icons.photo_library),
                       title: Text('Photo Library'),

@@ -15,49 +15,37 @@ class InvoiceView with ChangeNotifier {
 
   double get subTotal => _subTotal;
 
-  set setSubTotal(double value) {
-    _subTotal = value;
-  }
+  set setSubTotal(double value) => _subTotal = value;
 
   double _discount;
 
   double get discount => _discount;
 
-  set setDiscount(double value) {
-    _discount = value;
-  }
+  set setDiscount(double value) => _discount = value;
 
   double _difference = 0;
 
   double get difference => _difference;
 
-  set setDifference(double value) {
-    _difference = value;
-  }
+  set setDifference(double value) => _difference = value;
 
   List<Item> _itemsOfInvoice = [];
 
   List<Item> get itemsOfInvoice => _itemsOfInvoice;
 
-  set setItemsOfInvoice(List<Item> value) {
-    _itemsOfInvoice = value;
-  }
+  set setItemsOfInvoice(List<Item> value) => _itemsOfInvoice = value;
 
   double _total = 0;
 
   double get total => _total;
 
-  set setTotal(double value) {
-    _total = value;
-  }
+  set setTotal(double value) => _total = value;
 
   DateTime _date = DateTime.now();
 
   DateTime get date => _date;
 
-  set setDate(DateTime value) {
-    _date = value;
-  }
+  set setDate(DateTime value) => _date = value;
 
   List<String> dueOptions = [
     'Due on receipt',
@@ -71,16 +59,23 @@ class InvoiceView with ChangeNotifier {
 
   String get dueOption => _dueOption;
 
-  set setDueOption(String value) {
-    _dueOption = value;
-  }
+  set setDueOption(String value) => _dueOption = value;
 
   String _dueDate;
 
   String get dueDate => _dueDate;
 
-  set setDueDate(String value) {
-    _dueDate = value;
+  set setDueDate(String value) => _dueDate = value;
+
+  String _signature;
+
+  String get signature => _signature;
+
+  set setSignature(String value) => _signature = value;
+
+  void setSignatureImage(String value) {
+    _signature = value;
+    notifyListeners();
   }
 
   Future<Invoice> saveInvoice(
@@ -91,6 +86,8 @@ class InvoiceView with ChangeNotifier {
     int date,
     String dueDate,
     String dueOption,
+    String signature,
+    String comment,
   ) async {
     Invoice res = await DBProvider.db.upsertInvoice(
       invoice,
@@ -100,6 +97,8 @@ class InvoiceView with ChangeNotifier {
       date,
       dueDate,
       dueOption,
+      signature,
+      comment,
     );
     getAllInvoices();
     _total = total;
@@ -126,6 +125,7 @@ class InvoiceView with ChangeNotifier {
     _date = DateTime.fromMillisecondsSinceEpoch(res.date);
     _dueDate = res.dueDate;
     _dueOption = res.dueOption;
+    _signature = res.signature;
     notifyListeners();
   }
 
