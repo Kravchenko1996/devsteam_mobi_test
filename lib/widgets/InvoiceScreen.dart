@@ -1,3 +1,5 @@
+import 'package:devsteam_mobi_test/ToolBarWidget.dart';
+import 'package:devsteam_mobi_test/models/EmailCredentials.dart';
 import 'package:devsteam_mobi_test/models/Invoice.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/models/Payment.dart';
@@ -21,9 +23,10 @@ import 'package:devsteam_mobi_test/widgets/Payment/PaidWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Pdf/PdfWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Photo/AddPhotoWidget.dart';
 import 'package:devsteam_mobi_test/widgets/RowWidget.dart';
-import 'package:devsteam_mobi_test/widgets/Signature/AddSignatureWidget.dart';
+import 'package:devsteam_mobi_test/widgets/Signature/SignatureWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:pdf/pdf.dart';
 import 'package:provider/provider.dart';
 
 class InvoiceScreen extends StatefulWidget {
@@ -42,6 +45,8 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   final _invoiceFormKey = GlobalKey<FormState>();
   final _itemFormKey = GlobalKey<FormState>();
   final _commentFormKey = GlobalKey<FormState>();
+  final _clientFormKey = GlobalKey<FormState>();
+  final GlobalKey<State<StatefulWidget>> shareWidget = GlobalKey();
 
   final TextEditingController _invoiceNameController = TextEditingController();
   final TextEditingController _itemTitleController = TextEditingController();
@@ -49,6 +54,8 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   final TextEditingController _itemQuantityController = TextEditingController();
   final TextEditingController _itemAmountController = TextEditingController();
   final TextEditingController _commentController = TextEditingController();
+  final TextEditingController _clientNameController = TextEditingController();
+  final TextEditingController _clientEmailController = TextEditingController();
 
   @override
   void initState() {
@@ -152,57 +159,96 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                     PhotoView photoView,
                     Widget child,
                   ) {
-                    return Scaffold(
-                      resizeToAvoidBottomInset: true,
-                      appBar: AppBar(
-                        leading: IconButton(
-                          icon: Icon(MdiIcons.close),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                        title: Form(
-                          key: _invoiceFormKey,
-                          child: InvoiceNameWidget(
-                            invoice: widget.invoice,
-                            invoiceName: _invoiceNameController,
-                          ),
-                        ),
-                        actions: [
-                          MaterialButton(
-                            onPressed: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => PdfWidget(
-                                    invoice: widget.invoice ?? null,
+                    return Consumer<ClientView>(
+                      builder: (
+                        BuildContext clientContext,
+                        ClientView clientView,
+                        Widget child,
+                      ) {
+                        return Consumer<PdfView>(
+                          builder: (
+                            BuildContext pdfContext,
+                            PdfView pdfView,
+                            Widget child,
+                          ) {
+                            return Scaffold(
+                              resizeToAvoidBottomInset: true,
+                              appBar: AppBar(
+                                leading: IconButton(
+                                  icon: Icon(MdiIcons.close),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                ),
+                                title: Form(
+                                  key: _invoiceFormKey,
+                                  child: InvoiceNameWidget(
+                                    invoice: widget.invoice,
+                                    invoiceName: _invoiceNameController,
                                   ),
                                 ),
-                              );
-                            },
-                            child: Text(
-                              'Preview',
-                            ),
-                          ),
-                          _submitInvoice(
-                            itemView,
-                            invoiceView,
-                            paymentView,
-                            photoView,
-                          ),
-                        ],
-                      ),
-                      body: SafeArea(
-                        child: Container(
-                          margin: EdgeInsets.symmetric(horizontal: 15),
-                          child: SingleChildScrollView(
-                            physics: ScrollPhysics(),
-                            child: _buildBody(
-                              itemView,
-                              invoiceView,
-                              paymentView,
-                            ),
-                          ),
-                        ),
-                      ),
+                                actions: [
+                                  clientView.client != null &&
+                                          invoiceView.itemsOfInvoice.length != 0
+                                      ? MaterialButton(
+                                          onPressed: () async {
+                                            await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => PdfWidget(
+                                                  invoice:
+                                                      widget.invoice ?? null,
+                                                  clientFormKey: _clientFormKey,
+                                                  clientName:
+                                                      _clientNameController,
+                                                  clientEmail:
+                                                      _clientEmailController,
+                                                  shareWidget: shareWidget,
+                                                ),
+                                                settings: RouteSettings(
+                                                  name: 'PdfWidget',
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Text(
+                                            'Preview',
+                                          ),
+                                        )
+                                      : Center(
+                                          child: Text(
+                                            'Preview',
+                                            style: TextStyle(
+                                              color: Colors.white54,
+                                            ),
+                                          ),
+                                        ),
+                                  _submitInvoice(
+                                    itemView,
+                                    invoiceView,
+                                    paymentView,
+                                    photoView,
+                                  ),
+                                ],
+                              ),
+                              body: SafeArea(
+                                child: Container(
+                                  margin: EdgeInsets.symmetric(horizontal: 15),
+                                  child: SingleChildScrollView(
+                                    physics: ScrollPhysics(),
+                                    child: Container()
+                                    // _buildBody(
+                                    //   itemView,
+                                    //   invoiceView,
+                                    //   paymentView,
+                                    //   pdfView,
+                                    //   companyView,
+                                    // ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
                     );
                   },
                 );
@@ -296,9 +342,26 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     ItemView itemView,
     InvoiceView invoiceView,
     PaymentView paymentView,
+    EmailCredentials emailCredentials,
+    ClientView clientView,
+    CompanyView companyView,
+    PdfView pdfView,
+      PdfPageFormat pageFormat,
   ) {
     return Column(
       children: [
+        pdfView.buildToolBar(
+          widget.invoice,
+          emailCredentials,
+          clientView,
+          companyView,
+          _clientNameController,
+          _clientEmailController,
+          _clientFormKey,
+          context,
+          shareWidget,
+          pageFormat,
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -308,6 +371,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         ),
         ClientWidget(
           invoice: widget.invoice,
+          clientFormKey: _clientFormKey,
+          clientName: _clientNameController,
+          clientEmail: _clientEmailController,
         ),
         _buildItems(
           itemView,

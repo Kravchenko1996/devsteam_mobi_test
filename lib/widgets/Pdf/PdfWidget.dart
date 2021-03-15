@@ -1,24 +1,31 @@
-import 'dart:typed_data';
-
+import 'package:devsteam_mobi_test/ToolBarWidget.dart';
+import 'package:devsteam_mobi_test/models/EmailCredentials.dart';
 import 'package:devsteam_mobi_test/models/Invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/client.dart';
 import 'package:devsteam_mobi_test/viewmodels/company.dart';
 import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
+import 'package:devsteam_mobi_test/viewmodels/photo.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:mailer/mailer.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 class PdfWidget extends StatefulWidget {
   final Invoice invoice;
+  final GlobalKey clientFormKey;
+  final TextEditingController clientName;
+  final TextEditingController clientEmail;
+  final GlobalKey shareWidget;
 
   const PdfWidget({
     Key key,
     this.invoice,
+    this.clientFormKey,
+    this.clientName,
+    this.clientEmail,
+    this.shareWidget,
   }) : super(key: key);
 
   @override
@@ -26,163 +33,8 @@ class PdfWidget extends StatefulWidget {
 }
 
 class _PdfWidgetState extends State<PdfWidget> {
-  final GlobalKey<State<StatefulWidget>> shareWidget = GlobalKey();
-  var pageFormat;
-
-  Future<Uint8List> _generatePdf(
-    PdfPageFormat format,
-    Invoice invoice,
-    CompanyView companyView,
-    ClientView clientView,
-    InvoiceView invoiceView,
-    PaymentView paymentView,
-  ) async {
-    final doc = pw.Document();
-    doc.addPage(
-      pw.Page(
-        pageFormat: format,
-        build: (pw.Context context) {
-          return pw.Column(
-            children: [
-              pw.Row(
-                children: [
-                  pw.Text(invoice.name),
-                ],
-              ),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text(
-                    'Issued ${_formatDate(
-                      DateTime.fromMillisecondsSinceEpoch(
-                        invoice.date,
-                      ),
-                    )}',
-                  ),
-                  pw.Text(
-                    'Due ${_formatDate(
-                      DateTime.parse(
-                        invoice.dueDate,
-                      ),
-                    )}',
-                  ),
-                ],
-              ),
-              pw.Divider(),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('From'),
-                  pw.Text('To'),
-                ],
-              ),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text(companyView.company.name),
-                  pw.Text(clientView.client.name),
-                ],
-              ),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.end,
-                children: [
-                  pw.Text(
-                    'Email',
-                  ),
-                  pw.Text(clientView.client.email ?? '  No email')
-                ],
-              ),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Description'),
-                  pw.Text('Quantity'),
-                  pw.Text('Rate'),
-                  pw.Text('Amount'),
-                ],
-              ),
-              pw.Divider(),
-              invoiceView.itemsOfInvoice.length != 0
-                  ? pw.ListView.builder(
-                      itemCount: invoiceView.itemsOfInvoice.length,
-                      itemBuilder: (context, int index) {
-                        return pw.Row(
-                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                          children: [
-                            pw.Text(invoiceView.itemsOfInvoice[index].title),
-                            pw.Text(
-                              invoiceView.itemsOfInvoice[index].quantity
-                                  .toString(),
-                            ),
-                            pw.Text(
-                              invoiceView.itemsOfInvoice[index].price
-                                  .toString(),
-                            ),
-                            pw.Text(
-                              invoiceView.itemsOfInvoice[index].amount
-                                  .toString(),
-                            ),
-                          ],
-                        );
-                      })
-                  : pw.Container(),
-              pw.Divider(),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Subtotal'),
-                  pw.Text(
-                    invoiceView.subTotal.toString(),
-                  ),
-                ],
-              ),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Discount (${invoiceView.discount.toString()}%)'),
-                  pw.Text(
-                    invoiceView.difference.toString(),
-                  ),
-                ],
-              ),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Total'),
-                  pw.Text(
-                    invoiceView.total.toString(),
-                  ),
-                ],
-              ),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Paid'),
-                  pw.Text(
-                    paymentView.paymentsSum.toString(),
-                  ),
-                ],
-              ),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('Balance due'),
-                  pw.Text(
-                    (invoiceView.total - paymentView.paymentsSum).toString(),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
-    );
-    return doc.save();
-  }
-
-  String _formatDate(DateTime dateTime) {
-    return DateFormat('MMM d, y').format(dateTime);
-  }
+  PdfPageFormat pageFormat;
+  SendReport sendReport;
 
   @override
   Widget build(BuildContext context) {
@@ -210,75 +62,73 @@ class _PdfWidgetState extends State<PdfWidget> {
                     PaymentView paymentView,
                     Widget child,
                   ) {
-                    return Scaffold(
-                      appBar: AppBar(
-                        title: Text('Preview'),
-                        centerTitle: true,
-                      ),
-                      body: SafeArea(
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(10),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  GestureDetector(
+                    return Consumer(
+                      builder: (
+                        BuildContext photoContext,
+                        PhotoView photoView,
+                        Widget child,
+                      ) {
+                        return Consumer(
+                          builder: (
+                            BuildContext emailContext,
+                            EmailCredentials emailCredentials,
+                            Widget child,
+                          ) {
+                            return Consumer(
+                              builder: (
+                                BuildContext pdfContext,
+                                PdfView pdfView,
+                                Widget child,
+                              ) {
+                                return Scaffold(
+                                  appBar: AppBar(
+                                    title: Text('Preview'),
+                                    centerTitle: true,
+                                  ),
+                                  body: SafeArea(
                                     child: Column(
                                       children: [
-                                        Icon(MdiIcons.shareVariantOutline),
-                                        Text('Share'),
+                                        Container(
+                                          padding: EdgeInsets.all(10),
+                                          child: pdfView.buildToolBar(
+                                            widget.invoice,
+                                            emailCredentials,
+                                            clientView,
+                                            companyView,
+                                            widget.clientName,
+                                            widget.clientEmail,
+                                            widget.clientFormKey,
+                                            context,
+                                            widget.shareWidget,
+                                            pageFormat,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: PdfPreview(
+                                            useActions: false,
+                                            build: (format) {
+                                              pageFormat = format;
+                                              return pdfView.generatePdf(
+                                                pageFormat,
+                                                widget.invoice,
+                                                companyView,
+                                                clientView,
+                                                invoiceView,
+                                                paymentView,
+                                                photoView,
+                                              );
+                                            },
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                    key: shareWidget,
-                                    onTap: () => _share(
-                                      pageFormat,
-                                      widget.invoice,
-                                      companyView,
-                                      clientView,
-                                      invoiceView,
-                                      paymentView,
-                                    ),
                                   ),
-                                  GestureDetector(
-                                    child: Column(
-                                      children: [
-                                        Icon(MdiIcons.printer),
-                                        Text('Print'),
-                                      ],
-                                    ),
-                                    onTap: () => _print(
-                                      pageFormat,
-                                      widget.invoice,
-                                      companyView,
-                                      clientView,
-                                      invoiceView,
-                                      paymentView,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: PdfPreview(
-                                useActions: false,
-                                build: (format) {
-                                  pageFormat = format;
-                                  return _generatePdf(
-                                    format,
-                                    widget.invoice,
-                                    companyView,
-                                    clientView,
-                                    invoiceView,
-                                    paymentView,
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
                     );
                   },
                 );
@@ -287,78 +137,6 @@ class _PdfWidgetState extends State<PdfWidget> {
           },
         );
       },
-    );
-  }
-
-  Future<void> _share(
-    pageFormat,
-    Invoice invoice,
-    companyView,
-    clientView,
-    invoiceView,
-    paymentView,
-  ) async {
-    // Calculate the widget center for iPad sharing popup position
-    final RenderBox referenceBox =
-        shareWidget.currentContext.findRenderObject();
-    final topLeft =
-        referenceBox.localToGlobal(referenceBox.paintBounds.topLeft);
-    final bottomRight =
-        referenceBox.localToGlobal(referenceBox.paintBounds.bottomRight);
-    final bounds = Rect.fromPoints(topLeft, bottomRight);
-
-    print(_generatePdf(
-      pageFormat,
-      invoice,
-      companyView,
-      clientView,
-      invoiceView,
-      paymentView,
-    ));
-    final bytes = await _generatePdf(
-      pageFormat,
-      invoice,
-      companyView,
-      clientView,
-      invoiceView,
-      paymentView,
-    );
-    await Printing.sharePdf(
-      bytes: bytes,
-      bounds: bounds,
-      filename: 'toChange.pdf',
-    );
-  }
-
-  Future<void> _print(
-    pageFormat,
-    Invoice invoice,
-    companyView,
-    clientView,
-    invoiceView,
-    paymentView,
-  ) async {
-    final bytes = _generatePdf(
-      pageFormat,
-      invoice,
-      companyView,
-      clientView,
-      invoiceView,
-      paymentView,
-    );
-    print(bytes.runtimeType);
-
-    await Printing.layoutPdf(
-      onLayout: (_) => _generatePdf(
-        pageFormat,
-        invoice,
-        companyView,
-        clientView,
-        invoiceView,
-        paymentView,
-      ),
-      name: 'Document',
-      format: pageFormat,
     );
   }
 }

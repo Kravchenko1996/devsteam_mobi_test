@@ -55,12 +55,16 @@ class _ClientFormState extends State<ClientForm> {
                           child: Text('Save'),
                           onPressed: () async {
                             clientView.saveClient(
-                                Client(
-                                  name: widget.clientName.text,
-                                ),
-                                context.read<ClientView>().client != null
-                                    ? context.read<ClientView>().client.id
-                                    : null);
+                              Client(
+                                name: widget.clientName.text,
+                                email: widget.clientEmail.text.isNotEmpty
+                                    ? widget.clientEmail.text
+                                    : null,
+                              ),
+                              context.read<ClientView>().client != null
+                                  ? context.read<ClientView>().client.id
+                                  : null,
+                            );
                             Navigator.of(context).pop();
                           },
                         ),
@@ -115,7 +119,6 @@ class _ClientFormState extends State<ClientForm> {
                                 builder: (context) => ContactsScreen(
                                   clientName: widget.clientName,
                                   clientEmail: widget.clientEmail,
-                                  // onChoose: _selectClientFromList,
                                 ),
                               ),
                             );

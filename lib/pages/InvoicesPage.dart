@@ -52,7 +52,9 @@ class _InvoicesPageState extends State<InvoicesPage> {
                                 builder: (context) => InvoiceScreen(
                                   invoice: invoiceView.invoices[index],
                                 ),
-                                settings: RouteSettings(name: 'InvoiceScreen'),
+                                settings: RouteSettings(
+                                  name: 'InvoiceScreen',
+                                ),
                               ),
                             );
                           },

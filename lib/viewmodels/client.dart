@@ -24,6 +24,8 @@ class ClientView with ChangeNotifier {
       client,
       clientId,
     );
+    print('-----');
+    print(res.toMap());
     _client = res;
     notifyListeners();
   }

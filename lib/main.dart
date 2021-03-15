@@ -1,3 +1,5 @@
+import 'package:devsteam_mobi_test/ToolBarWidget.dart';
+import 'package:devsteam_mobi_test/models/EmailCredentials.dart';
 import 'package:devsteam_mobi_test/viewmodels/client.dart';
 import 'package:devsteam_mobi_test/viewmodels/company.dart';
 import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
@@ -9,7 +11,7 @@ import 'package:provider/provider.dart';
 
 import 'pages/HomePage.dart';
 
-void main() {
+void main() async {
   initApp();
 }
 
@@ -34,6 +36,12 @@ void initApp() {
         ),
         ChangeNotifierProvider<PhotoView>(
           create: (_) => PhotoView(),
+        ),
+        ChangeNotifierProvider<EmailCredentials>(
+          create: (_) => EmailCredentials(),
+        ),
+        ChangeNotifierProvider<PdfView>(
+          create: (_) => PdfView(),
         ),
       ],
       child: MyApp(),

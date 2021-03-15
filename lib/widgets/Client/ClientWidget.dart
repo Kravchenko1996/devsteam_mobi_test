@@ -10,10 +10,16 @@ import 'package:provider/provider.dart';
 
 class ClientWidget extends StatefulWidget {
   final Invoice invoice;
+  final GlobalKey clientFormKey;
+  final TextEditingController clientName;
+  final TextEditingController clientEmail;
 
   const ClientWidget({
     Key key,
     this.invoice,
+    this.clientFormKey,
+    this.clientName,
+    this.clientEmail,
   }) : super(key: key);
 
   @override
@@ -21,10 +27,6 @@ class ClientWidget extends StatefulWidget {
 }
 
 class _ClientWidgetState extends State<ClientWidget> {
-  final _clientFormKey = GlobalKey<FormState>();
-  final TextEditingController _clientNameController = TextEditingController();
-  final TextEditingController _clientEmailController = TextEditingController();
-
   String _getClientById() {
     if (widget.invoice != null && widget.invoice.clientId != null) {
       context.read<ClientView>().getClientById(widget.invoice.clientId);
@@ -49,17 +51,17 @@ class _ClientWidgetState extends State<ClientWidget> {
             final PermissionStatus permissionStatus = await _getPermission();
             if (permissionStatus == PermissionStatus.granted) {
               if (clientView.client != null) {
-                _clientNameController.text = clientView.client.name;
-                _clientEmailController.text = clientView.client.email;
+                widget.clientName.text = clientView.client.name;
+                widget.clientEmail.text = clientView.client.email;
               }
               if (_getClientById() == null &&
-                  _clientNameController.text.isEmpty) {
+                  widget.clientName.text.isEmpty) {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ContactsScreen(
-                      clientName: _clientNameController,
-                      clientEmail: _clientEmailController,
+                      clientName: widget.clientName,
+                      clientEmail: widget.clientEmail,
                     ),
                   ),
                 );
@@ -72,9 +74,9 @@ class _ClientWidgetState extends State<ClientWidget> {
                   context: context,
                   builder: (BuildContext context) {
                     return ClientForm(
-                      clientFormKey: _clientFormKey,
-                      clientName: _clientNameController,
-                      clientEmail: _clientEmailController,
+                      clientFormKey: widget.clientFormKey,
+                      clientName: widget.clientName,
+                      clientEmail: widget.clientEmail,
                       invoice: widget.invoice,
                     );
                   },
@@ -108,9 +110,6 @@ class _ClientWidgetState extends State<ClientWidget> {
                   size: 30,
                 ),
                 Text(
-                  // _clientNameController.text.isEmpty
-                  //     ? 'Client'
-                  //     : _clientNameController.text,
                   clientView.client != null ? clientView.client.name : 'Client',
                   style: TextStyle(
                     color: Colors.grey,

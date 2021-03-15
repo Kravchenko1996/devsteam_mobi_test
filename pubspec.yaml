@@ -24,6 +24,8 @@ dependencies:
   syncfusion_flutter_signaturepad: ^18.4.47-beta
   printing: 4.1.0
   pdf: ^2.1.0
+  mailer: ^3.3.0
+
 
 dev_dependencies:
   flutter_test:
