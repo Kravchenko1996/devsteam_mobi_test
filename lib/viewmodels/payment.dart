@@ -41,6 +41,11 @@ class PaymentView with ChangeNotifier {
     _balanceDue = value;
   }
 
+  TextEditingController _paymentMethodController = TextEditingController();
+  TextEditingController _paymentAmountController = TextEditingController();
+  TextEditingController get paymentMethod => _paymentMethodController;
+  TextEditingController get paymentAmount => _paymentAmountController;
+
   void savePayment(
     Payment payment,
     int invoiceId,

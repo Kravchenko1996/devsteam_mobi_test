@@ -10,10 +10,16 @@ class ClientView with ChangeNotifier {
     _client = value;
   }
 
-  void getClientById(int clientId) async {
-    var res = await DBProvider.db.getClientById(clientId);
+  void resetClient() {
+    _client = null;
+    notifyListeners();
+  }
+
+  Future<Client> getClientById(int clientId) async {
+    Client res = await DBProvider.db.getClientById(clientId);
     _client = res;
     notifyListeners();
+    return res;
   }
 
   void saveClient(
@@ -24,8 +30,6 @@ class ClientView with ChangeNotifier {
       client,
       clientId,
     );
-    print('-----');
-    print(res.toMap());
     _client = res;
     notifyListeners();
   }

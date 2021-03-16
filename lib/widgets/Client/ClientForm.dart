@@ -1,6 +1,7 @@
 import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/models/Invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/client.dart';
+import 'package:devsteam_mobi_test/widgets/Client/ClientFullScreen.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ContactsScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -101,12 +102,16 @@ class _ClientFormState extends State<ClientForm> {
                       children: [
                         RaisedButton(
                           onPressed: () {
-                            clientView
-                                .removeClientFromInvoice(widget.invoice.id);
+                            if (widget.invoice != null &&
+                                widget.invoice.id != null) {
+                              clientView
+                                  .removeClientFromInvoice(widget.invoice.id);
+                            }
                             setState(() {
                               widget.clientName.text = '';
                               widget.clientEmail.text = '';
                             });
+                            clientView.resetClient();
                             Navigator.of(context).pop();
                           },
                           child: Text('Delete'),
@@ -117,6 +122,7 @@ class _ClientFormState extends State<ClientForm> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => ContactsScreen(
+                                  clientFormKey: widget.clientFormKey,
                                   clientName: widget.clientName,
                                   clientEmail: widget.clientEmail,
                                 ),
@@ -125,6 +131,22 @@ class _ClientFormState extends State<ClientForm> {
                           },
                           child: Text('All clients'),
                         ),
+                        RaisedButton(
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ClientFullScreen(
+                                  client: clientView.client,
+                                  clientName: widget.clientName,
+                                  clientEmail: widget.clientEmail,
+                                  toEdit: true,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text('More info'),
+                        )
                       ],
                     ),
                   ],

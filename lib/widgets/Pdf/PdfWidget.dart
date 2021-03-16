@@ -1,4 +1,4 @@
-import 'package:devsteam_mobi_test/ToolBarWidget.dart';
+import 'package:devsteam_mobi_test/viewmodels/PdfView.dart';
 import 'package:devsteam_mobi_test/models/EmailCredentials.dart';
 import 'package:devsteam_mobi_test/models/Invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/client.dart';
@@ -7,8 +7,6 @@ import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
 import 'package:devsteam_mobi_test/viewmodels/photo.dart';
 import 'package:flutter/material.dart';
-import 'package:mailer/mailer.dart';
-import 'package:pdf/pdf.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
@@ -17,7 +15,6 @@ class PdfWidget extends StatefulWidget {
   final GlobalKey clientFormKey;
   final TextEditingController clientName;
   final TextEditingController clientEmail;
-  final GlobalKey shareWidget;
 
   const PdfWidget({
     Key key,
@@ -25,7 +22,6 @@ class PdfWidget extends StatefulWidget {
     this.clientFormKey,
     this.clientName,
     this.clientEmail,
-    this.shareWidget,
   }) : super(key: key);
 
   @override
@@ -33,9 +29,7 @@ class PdfWidget extends StatefulWidget {
 }
 
 class _PdfWidgetState extends State<PdfWidget> {
-  PdfPageFormat pageFormat;
-  SendReport sendReport;
-
+  final GlobalKey<State<StatefulWidget>> shareWidget = GlobalKey();
   @override
   Widget build(BuildContext context) {
     return Consumer(
@@ -99,17 +93,17 @@ class _PdfWidgetState extends State<PdfWidget> {
                                             widget.clientEmail,
                                             widget.clientFormKey,
                                             context,
-                                            widget.shareWidget,
-                                            pageFormat,
+                                            shareWidget,
+                                            invoiceView,
+                                            paymentView,
+                                            photoView,
                                           ),
                                         ),
                                         Expanded(
                                           child: PdfPreview(
                                             useActions: false,
-                                            build: (format) {
-                                              pageFormat = format;
+                                            build: (_) {
                                               return pdfView.generatePdf(
-                                                pageFormat,
                                                 widget.invoice,
                                                 companyView,
                                                 clientView,

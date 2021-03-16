@@ -27,15 +27,6 @@ class ClientWidget extends StatefulWidget {
 }
 
 class _ClientWidgetState extends State<ClientWidget> {
-  String _getClientById() {
-    if (widget.invoice != null && widget.invoice.clientId != null) {
-      context.read<ClientView>().getClientById(widget.invoice.clientId);
-      return context.read<ClientView>().client != null
-          ? context.read<ClientView>().client.name
-          : '';
-    }
-    return null;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,12 +45,13 @@ class _ClientWidgetState extends State<ClientWidget> {
                 widget.clientName.text = clientView.client.name;
                 widget.clientEmail.text = clientView.client.email;
               }
-              if (_getClientById() == null &&
+              if (
                   widget.clientName.text.isEmpty) {
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ContactsScreen(
+                      clientFormKey: widget.clientFormKey,
                       clientName: widget.clientName,
                       clientEmail: widget.clientEmail,
                     ),
@@ -92,6 +84,7 @@ class _ClientWidgetState extends State<ClientWidget> {
                     'permission in system settings',
                   ),
                   actions: [
+                    //ToDo replace cupertino dialog
                     CupertinoDialogAction(
                       child: Text('OK'),
                       onPressed: () => Navigator.of(context).pop(),

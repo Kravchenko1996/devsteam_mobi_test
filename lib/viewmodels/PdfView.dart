@@ -10,6 +10,7 @@ import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
 import 'package:devsteam_mobi_test/viewmodels/photo.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ClientForm.dart';
+import 'package:devsteam_mobi_test/widgets/Payment/PaymentModal.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mailer/mailer.dart';
@@ -27,7 +28,6 @@ class PdfView with ChangeNotifier {
   Future<Uint8List> get pdf => _pdf;
 
   Future<Uint8List> generatePdf(
-    PdfPageFormat format,
     Invoice invoice,
     CompanyView companyView,
     ClientView clientView,
@@ -38,7 +38,7 @@ class PdfView with ChangeNotifier {
     final doc = pw.Document();
     doc.addPage(
       pw.Page(
-        pageFormat: format,
+        pageFormat: PdfPageFormat.a4,
         build: (pw.Context context) {
           return pw.Column(
             children: [
@@ -199,7 +199,23 @@ class PdfView with ChangeNotifier {
     return DateFormat('MMM d, y').format(dateTime);
   }
 
-  Future<void> share(GlobalKey shareWidget) async {
+  Future<void> share(
+    GlobalKey shareWidget,
+    Invoice invoice,
+    InvoiceView invoiceView,
+    PaymentView paymentView,
+    PhotoView photoView,
+    ClientView clientView,
+    CompanyView companyView,
+  ) async {
+    generatePdf(
+      invoice,
+      companyView,
+      clientView,
+      invoiceView,
+      paymentView,
+      photoView,
+    );
     // Calculate the widget center for iPad sharing popup position
     final RenderBox referenceBox =
         shareWidget.currentContext.findRenderObject();
@@ -211,20 +227,38 @@ class PdfView with ChangeNotifier {
     await Printing.sharePdf(
       bytes: await _pdf,
       bounds: bounds,
-      filename: 'toChange.pdf',
+      filename: '${invoice.name}.pdf',
     );
   }
 
-  Future<void> printFile(PdfPageFormat pageFormat) async {
+  Future<void> printFile(
+    Invoice invoice,
+    InvoiceView invoiceView,
+    PaymentView paymentView,
+    PhotoView photoView,
+    ClientView clientView,
+    CompanyView companyView,
+  ) async {
+    generatePdf(
+      invoice,
+      companyView,
+      clientView,
+      invoiceView,
+      paymentView,
+      photoView,
+    );
     await Printing.layoutPdf(
       onLayout: (_) => _pdf,
-      name: 'Document',
-      format: pageFormat,
+      name: '${invoice.name}.pdf',
+      format: PdfPageFormat.a4,
     );
   }
 
   Future<void> sendEmail(
     Invoice invoice,
+    InvoiceView invoiceView,
+    PaymentView paymentView,
+    PhotoView photoView,
     EmailCredentials emailCredentials,
     ClientView clientView,
     CompanyView companyView,
@@ -279,8 +313,16 @@ class PdfView with ChangeNotifier {
         },
       );
     } else {
+      generatePdf(
+        invoice,
+        companyView,
+        clientView,
+        invoiceView,
+        paymentView,
+        photoView,
+      );
       final output = await getTemporaryDirectory();
-      final file = File("${output.path}/example.pdf");
+      final file = File("${output.path}/${invoice.name}.pdf");
       await file.writeAsBytes(
         await _pdf,
       );
@@ -344,77 +386,171 @@ class PdfView with ChangeNotifier {
     GlobalKey clientFormKey,
     context,
     GlobalKey shareWidget,
-    PdfPageFormat pageFormat,
+    InvoiceView invoiceView,
+    PaymentView paymentView,
+    PhotoView photoView,
   ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        GestureDetector(
-          child: Column(
-            children: [
-              Icon(MdiIcons.send),
-              Text('Send'),
-            ],
-          ),
-          onTap: () async {
-            final PermissionStatus permissionStatus = await _getPermission();
-            if (permissionStatus == PermissionStatus.granted) {
-              sendEmail(
-                invoice,
-                emailCredentials,
-                clientView,
-                companyView,
-                clientName,
-                clientEmail,
-                clientFormKey,
-                context,
-              );
-            } else {
-              showModalBottomSheet(
-                isScrollControlled: true,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    10,
+    return Container(
+      padding: EdgeInsets.only(top: 15),
+      child: clientView.client != null && invoiceView.itemsOfInvoice.length != 0
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  child: Column(
+                    children: [
+                      Icon(MdiIcons.send),
+                      Text('Send'),
+                    ],
+                  ),
+                  onTap: () async {
+                    final PermissionStatus permissionStatus =
+                        await _getPermission();
+                    if (permissionStatus == PermissionStatus.granted) {
+                      sendEmail(
+                        invoice,
+                        invoiceView,
+                        paymentView,
+                        photoView,
+                        emailCredentials,
+                        clientView,
+                        companyView,
+                        clientName,
+                        clientEmail,
+                        clientFormKey,
+                        context,
+                      );
+                    } else {
+                      showModalBottomSheet(
+                        isScrollControlled: true,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            10,
+                          ),
+                        ),
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Container(
+                            child: Text(
+                              'No permission',
+                            ),
+                          );
+                        },
+                      );
+                    }
+                  },
+                ),
+                GestureDetector(
+                  child: Column(
+                    children: [
+                      Icon(
+                        MdiIcons.shareVariantOutline,
+                      ),
+                      Text('Share'),
+                    ],
+                  ),
+                  key: shareWidget,
+                  onTap: () => share(
+                    shareWidget,
+                    invoice,
+                    invoiceView,
+                    paymentView,
+                    photoView,
+                    clientView,
+                    companyView,
                   ),
                 ),
-                context: context,
-                builder: (BuildContext context) {
-                  return Container(
-                    child: Text(
-                      'No permission',
+                GestureDetector(
+                  child: Column(
+                    children: [Icon(MdiIcons.creditCard), Text('Mark paid')],
+                  ),
+                  onTap: () => showModalBottomSheet(
+                    isScrollControlled: true,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  );
-                },
-              );
-            }
-          },
-        ),
-        GestureDetector(
-          child: Column(
-            children: [
-              Icon(
-                MdiIcons.shareVariantOutline,
-              ),
-              Text('Share'),
-            ],
-          ),
-          key: shareWidget,
-          onTap: () => share(
-            shareWidget,
-          ),
-        ),
-        GestureDetector(
-          child: Column(
-            children: [
-              Icon(MdiIcons.printer),
-              Text('Print'),
-            ],
-          ),
-          onTap: () => printFile(
-            pageFormat,
-          ),
-        ),
-      ],
+                    context: context,
+                    builder: (BuildContext context) {
+                      return PaymentModal(
+                        // paymentFormKey: _paymentFormKey,
+                        // paymentMethod: _paymentMethodController,
+                        // paymentAmount: _paymentAmountController,
+                        toCreate: true,
+                      );
+                    },
+                  ),
+                ),
+                GestureDetector(
+                  child: Column(
+                    children: [
+                      Icon(MdiIcons.printer),
+                      Text('Print'),
+                    ],
+                  ),
+                  onTap: () => printFile(
+                    invoice,
+                    invoiceView,
+                    paymentView,
+                    photoView,
+                    clientView,
+                    companyView,
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    Icon(
+                      MdiIcons.send,
+                      color: Colors.grey,
+                    ),
+                    Text(
+                      'Send',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Icon(
+                      MdiIcons.shareVariantOutline,
+                      color: Colors.grey,
+                    ),
+                    Text(
+                      'Send',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Icon(
+                      MdiIcons.creditCard,
+                      color: Colors.grey,
+                    ),
+                    Text(
+                      'Mark paid',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Icon(
+                      MdiIcons.printer,
+                      color: Colors.grey,
+                    ),
+                    Text(
+                      'Print',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ],
+            ),
     );
   }
 

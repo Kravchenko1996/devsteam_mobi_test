@@ -5,6 +5,7 @@ import 'package:devsteam_mobi_test/models/Company.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/models/Payment.dart';
 import 'package:devsteam_mobi_test/models/Photo.dart';
+import 'package:devsteam_mobi_test/models/Tax.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -43,7 +44,16 @@ class DBProvider {
           CREATE TABLE Clients (
             id INTEGER PRIMARY KEY,
             name TEXT NOT NULL,
-            email TEXT 
+            email TEXT,
+            phone INTEGER,
+            mobile INTEGER,
+            address1 TEXT,
+            address2 TEXT,
+            city TEXT,
+            state TEXT,
+            postal INTEGER,
+            country TEXT,
+            notes TEXT
       )""");
       await db.execute("""
           CREATE TABLE Invoices (
@@ -91,7 +101,37 @@ class DBProvider {
             FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION  
       )""");
+      await db.execute("""
+          CREATE TABLE Taxes (
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            type TEXT,
+            amount REAL,
+            included INTEGER,
+            invoice_id INTEGER,
+            FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
+              ON DELETE NO ACTION ON UPDATE NO ACTION  
+      )""");
     });
+  }
+
+  // TAXES
+
+  Future<Tax> upsertTax(
+    Tax tax,
+  ) async {
+    final db = await database;
+    if (tax.id == null) {
+      tax.id = await db.insert("Taxes", tax.toMap());
+    } else {
+      await db.update(
+        "Taxes",
+        tax.toMap(),
+        where: "id = ?",
+        whereArgs: [tax.id],
+      );
+    }
+    return tax;
   }
 
   // CLIENTS
@@ -109,7 +149,7 @@ class DBProvider {
         "Clients",
         client.toMap(),
         where: "id = ?",
-        whereArgs: [clientId],
+        whereArgs: [client.id],
       );
     }
     return client;

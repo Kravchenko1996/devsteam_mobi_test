@@ -8,7 +8,6 @@ class PaymentModal extends StatefulWidget {
   final GlobalKey paymentFormKey;
   final TextEditingController paymentMethod;
   final TextEditingController paymentAmount;
-  final TextEditingController invoiceBalanceDue;
   final bool toCreate;
 
   const PaymentModal({
@@ -16,7 +15,6 @@ class PaymentModal extends StatefulWidget {
     this.paymentFormKey,
     this.paymentMethod,
     this.paymentAmount,
-    this.invoiceBalanceDue,
     this.toCreate,
   }) : super(key: key);
 
@@ -27,6 +25,7 @@ class PaymentModal extends StatefulWidget {
 class _PaymentModalState extends State<PaymentModal> {
   bool isMenuOpen = false;
   double paymentsSum = 0;
+  final GlobalKey<FormState> _paymentFormKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -38,10 +37,11 @@ class _PaymentModalState extends State<PaymentModal> {
       );
       paymentView.countPaymentsSum(paymentView.paymentsOfInvoice);
       // Set "Other" as a default paymentMethod
-      widget.paymentMethod.text = paymentView.paymentMethods.last;
+      paymentView.paymentMethod.text =
+          paymentView.paymentMethods.last;
       // Always show the rest in new payment
       // ToDo select all text while adding new payment
-      widget.paymentAmount.text =
+      paymentView.paymentAmount.text =
           (context.read<InvoiceView>().total - paymentView.paymentsSum)
               .toString();
     }
@@ -85,7 +85,7 @@ class _PaymentModalState extends State<PaymentModal> {
                               return GestureDetector(
                                 onTap: () {
                                   setState(() {
-                                    widget.paymentMethod.text =
+                                    paymentView.paymentMethod.text =
                                         paymentView.paymentMethods[index];
                                     isMenuOpen = !isMenuOpen;
                                   });
@@ -116,9 +116,11 @@ class _PaymentModalState extends State<PaymentModal> {
                                 onPressed: () {
                                   if (widget.toCreate) {
                                     Payment newPayment = Payment(
-                                      method: widget.paymentMethod.text,
+                                      method: paymentView
+                                          .paymentMethod.text,
                                       amount: double.parse(
-                                        widget.paymentAmount.text,
+                                        paymentView
+                                            .paymentAmount.text,
                                       ),
                                     );
                                     paymentView.savePayment(
@@ -131,9 +133,11 @@ class _PaymentModalState extends State<PaymentModal> {
                                   } else {
                                     Payment editedPayment = Payment(
                                       id: paymentView.payment.id,
-                                      method: widget.paymentMethod.text,
+                                      method: paymentView
+                                          .paymentMethod.text,
                                       amount: double.parse(
-                                        widget.paymentAmount.text,
+                                        paymentView
+                                            .paymentAmount.text,
                                       ),
                                     );
                                     int index = paymentView.paymentsOfInvoice
@@ -158,7 +162,7 @@ class _PaymentModalState extends State<PaymentModal> {
                               Container(
                                 child: MaterialButton(
                                   child: Text(
-                                    widget.paymentMethod.text,
+                                    paymentView.paymentMethod.text,
                                   ),
                                   padding: EdgeInsets.zero,
                                   onPressed: () {
@@ -175,20 +179,22 @@ class _PaymentModalState extends State<PaymentModal> {
                                 ),
                               ),
                               Form(
-                                key: widget.paymentFormKey,
+                                key: _paymentFormKey,
                                 child: Container(
                                   width: 50,
                                   child: TextFormField(
                                     autofocus: true,
-                                    controller: widget.paymentAmount,
+                                    controller:
+                                        paymentView.paymentAmount,
                                     keyboardType: TextInputType.number,
                                     decoration: InputDecoration(
                                       hintText: '0.00',
                                     ),
-                                    onTap: () => widget.paymentAmount
+                                    onTap: () => paymentView
+                                        .paymentAmount
                                         .selection = TextSelection(
                                       baseOffset: 0,
-                                      extentOffset: widget
+                                      extentOffset: paymentView
                                           .paymentAmount.value.text.length,
                                     ),
                                   ),

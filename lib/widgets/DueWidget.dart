@@ -14,6 +14,7 @@ class DueWidget extends StatelessWidget {
         Widget child,
       ) {
         return MaterialButton(
+          padding: EdgeInsets.zero,
           onPressed: () => showModalBottomSheet(
             isScrollControlled: true,
             shape: RoundedRectangleBorder(

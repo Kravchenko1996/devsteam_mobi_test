@@ -31,6 +31,9 @@ class FABWidget extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => route,
+                  settings: RouteSettings(
+                    name: '$route',
+                  ),
                 ),
               );
       },

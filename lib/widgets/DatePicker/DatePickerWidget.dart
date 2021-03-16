@@ -7,6 +7,7 @@ class DatePickerWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialButton(
+      padding: EdgeInsets.zero,
       onPressed: () => _selectDate(context),
       child: Text(
         DateFormat('E, MMM d, y').format(context.read<InvoiceView>().date),

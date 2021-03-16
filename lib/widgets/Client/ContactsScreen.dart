@@ -3,15 +3,19 @@ import 'package:devsteam_mobi_test/Database.dart';
 import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/widgets/CenterLoadingIndicator.dart';
 import 'package:devsteam_mobi_test/widgets/Client/AllClientsWIdget.dart';
+import 'package:devsteam_mobi_test/widgets/Client/ClientFullScreen.dart';
+import 'package:devsteam_mobi_test/widgets/FABWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class ContactsScreen extends StatefulWidget {
+  final GlobalKey clientFormKey;
   final TextEditingController clientName;
   final TextEditingController clientEmail;
 
   const ContactsScreen({
     Key key,
+    this.clientFormKey,
     this.clientName,
     this.clientEmail,
   }) : super(key: key);
@@ -55,12 +59,13 @@ class _ContactsScreenState extends State<ContactsScreen> {
         ),
         centerTitle: true,
       ),
-      // ToDo FullClientInfoWidget
-      // floatingActionButton: FABWidget(
-      //   label: 'Create Client',
-      //   route: Container(),
-      // ),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FABWidget(
+        label: 'Create Client',
+        route: ClientFullScreen(
+          toEdit: false,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       body: _contacts == null
           ? CenterLoadingIndicator()
           : SingleChildScrollView(
@@ -76,7 +81,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
                         clients: _clients,
                         clientName: widget.clientName,
                         clientEmail: widget.clientEmail,
-                      )
+                      ),
+                      Divider(),
                     ],
                   ),
                   ListView.builder(
@@ -98,7 +104,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(
         vertical: 2,
-        horizontal: 18,
+        horizontal: 15,
       ),
       leading: (contact.avatar != null && contact.avatar.isNotEmpty)
           ? CircleAvatar(

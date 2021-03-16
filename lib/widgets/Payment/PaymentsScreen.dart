@@ -13,12 +13,6 @@ class PaymentsScreen extends StatefulWidget {
 }
 
 class _PaymentsScreenState extends State<PaymentsScreen> {
-  final _paymentFormKey = GlobalKey<FormState>();
-  final TextEditingController _paymentMethodController =
-      TextEditingController();
-  final TextEditingController _paymentAmountController =
-      TextEditingController();
-
   @override
   void initState() {
     super.initState();
@@ -45,9 +39,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             isModal: true,
             label: 'Add payment',
             route: PaymentModal(
-              paymentFormKey: _paymentFormKey,
-              paymentMethod: _paymentMethodController,
-              paymentAmount: _paymentAmountController,
               toCreate: true,
             ),
           ),
@@ -120,8 +111,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   child: GestureDetector(
                     onTap: () async {
                       paymentView.selectPaymentFromList(currentPayment);
-                      _paymentMethodController.text = currentPayment.method;
-                      _paymentAmountController.text =
+                      paymentView.paymentMethod.text = currentPayment.method;
+                      paymentView.paymentAmount.text =
                           currentPayment.amount.toString();
                       await showModalBottomSheet(
                         isScrollControlled: true,
@@ -131,9 +122,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                         context: context,
                         builder: (BuildContext context) {
                           return PaymentModal(
-                            paymentFormKey: _paymentFormKey,
-                            paymentMethod: _paymentMethodController,
-                            paymentAmount: _paymentAmountController,
                             toCreate: false,
                           );
                         },
