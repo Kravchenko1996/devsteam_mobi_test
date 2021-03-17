@@ -139,6 +139,7 @@ class InvoiceView with ChangeNotifier {
   }
 
   void countSubtotal(List<Item> itemsOfInvoice) {
+    print('im here');
     if (itemsOfInvoice != null) {
       // start new count each time the invoice has been opened
       _subTotal = 0;
@@ -151,6 +152,7 @@ class InvoiceView with ChangeNotifier {
   }
 
   void countTotal(List<Item> itemsOfInvoice) {
+    // ToDo count total after tax not included in price
     if (itemsOfInvoice != null) {
       // start new count each time the invoice has been opened
       _total = 0;

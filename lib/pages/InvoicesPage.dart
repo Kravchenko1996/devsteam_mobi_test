@@ -45,6 +45,7 @@ class _InvoicesPageState extends State<InvoicesPage> {
                       itemCount: invoiceView.invoices.length,
                       itemBuilder: (BuildContext context, int index) {
                         return GestureDetector(
+                          behavior: HitTestBehavior.translucent,
                           onTap: () async {
                             await Navigator.push(
                               context,

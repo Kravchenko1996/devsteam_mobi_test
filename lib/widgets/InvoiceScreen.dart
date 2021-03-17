@@ -1,3 +1,4 @@
+import 'package:devsteam_mobi_test/models/Tax.dart';
 import 'package:devsteam_mobi_test/viewmodels/PdfView.dart';
 import 'package:devsteam_mobi_test/models/EmailCredentials.dart';
 import 'package:devsteam_mobi_test/models/Invoice.dart';
@@ -10,6 +11,7 @@ import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/item.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
 import 'package:devsteam_mobi_test/viewmodels/photo.dart';
+import 'package:devsteam_mobi_test/viewmodels/tax.dart';
 import 'package:devsteam_mobi_test/widgets/Client/ClientWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Comment/CommentWidget.dart';
 import 'package:devsteam_mobi_test/widgets/Company/CompanyWidget.dart';
@@ -65,12 +67,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     ClientView clientView = Provider.of<ClientView>(context, listen: false);
     PhotoView photoView = Provider.of<PhotoView>(context, listen: false);
     CompanyView companyView = Provider.of<CompanyView>(context, listen: false);
+    TaxView taxView = Provider.of<TaxView>(context, listen: false);
     _getCompany(companyView);
     if (widget.invoice != null) {
       _getInvoiceById(widget.invoice.id, invoiceView);
       _getAllItemsByInvoiceId(widget.invoice.id, invoiceView);
       _getAllPaymentsByInvoiceId(widget.invoice.id, paymentView);
       _getAllPhotosByInvoiceId(widget.invoice.id, photoView);
+      _getTaxByInvoiceId(widget.invoice.id, taxView, invoiceView);
       if (widget.invoice.comment != null) {
         _commentController.text = widget.invoice.comment;
       }
@@ -92,6 +96,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     clientView.setClient = null;
     photoView.setPhotosOfInvoice = [];
     invoiceView.setSignature = null;
+    taxView.setTax = null;
+    taxView.setTaxesOfInvoice = [];
+    taxView.setTaxDifference = 0;
   }
 
   void _getAllItemsByInvoiceId(
@@ -131,6 +138,14 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
 
   void _getCompany(CompanyView companyView) async {
     companyView.getAllCompanies();
+  }
+
+  void _getTaxByInvoiceId(
+    int invoiceId,
+    TaxView taxView,
+    InvoiceView invoiceView,
+  ) async {
+    taxView.getTaxByInvoiceId(invoiceId, invoiceView);
   }
 
   @override
@@ -183,54 +198,65 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                                     EmailCredentials emailCredentials,
                                     Widget child,
                                   ) {
-                                    return Scaffold(
-                                      resizeToAvoidBottomInset: true,
-                                      appBar: AppBar(
-                                        leading: IconButton(
-                                          icon: Icon(MdiIcons.close),
-                                          onPressed: () =>
-                                              Navigator.of(context).pop(),
-                                        ),
-                                        title: Form(
-                                          key: _invoiceFormKey,
-                                          child: InvoiceNameWidget(
-                                            invoice: widget.invoice,
-                                            invoiceName: _invoiceNameController,
+                                    return Consumer<TaxView>(
+                                      builder: (
+                                        BuildContext taxContext,
+                                        TaxView taxView,
+                                        Widget child,
+                                      ) {
+                                        return Scaffold(
+                                          resizeToAvoidBottomInset: true,
+                                          appBar: AppBar(
+                                            leading: IconButton(
+                                              icon: Icon(MdiIcons.close),
+                                              onPressed: () =>
+                                                  Navigator.of(context).pop(),
+                                            ),
+                                            title: Form(
+                                              key: _invoiceFormKey,
+                                              child: InvoiceNameWidget(
+                                                invoice: widget.invoice,
+                                                invoiceName:
+                                                    _invoiceNameController,
+                                              ),
+                                            ),
+                                            actions: [
+                                              _previewInvoice(
+                                                clientView,
+                                                invoiceView,
+                                              ),
+                                              _submitInvoice(
+                                                itemView,
+                                                invoiceView,
+                                                paymentView,
+                                                photoView,
+                                                taxView,
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                        actions: [
-                                          _previewInvoice(
-                                            clientView,
-                                            invoiceView,
-                                          ),
-                                          _submitInvoice(
-                                            itemView,
-                                            invoiceView,
-                                            paymentView,
-                                            photoView,
-                                          ),
-                                        ],
-                                      ),
-                                      body: SafeArea(
-                                        child: Container(
-                                          margin: EdgeInsets.symmetric(
-                                            horizontal: 15,
-                                          ),
-                                          child: SingleChildScrollView(
-                                            physics: ScrollPhysics(),
-                                            child: _buildBody(
-                                              itemView,
-                                              invoiceView,
-                                              paymentView,
-                                              emailCredentials,
-                                              clientView,
-                                              companyView,
-                                              pdfView,
-                                              photoView,
+                                          body: SafeArea(
+                                            child: Container(
+                                              margin: EdgeInsets.symmetric(
+                                                horizontal: 15,
+                                              ),
+                                              child: SingleChildScrollView(
+                                                physics: ScrollPhysics(),
+                                                child: _buildBody(
+                                                  itemView,
+                                                  invoiceView,
+                                                  paymentView,
+                                                  emailCredentials,
+                                                  clientView,
+                                                  companyView,
+                                                  pdfView,
+                                                  photoView,
+                                                  taxView,
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ),
+                                        );
+                                      },
                                     );
                                   },
                                 );
@@ -291,6 +317,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     InvoiceView invoiceView,
     PaymentView paymentView,
     PhotoView photoView,
+    TaxView taxView,
   ) {
     return MaterialButton(
       onPressed: () async {
@@ -358,6 +385,16 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
             },
           );
         }
+        if (taxView.taxesOfInvoice.length != 0) {
+          taxView.taxesOfInvoice.forEach(
+            (Tax tax) async {
+              taxView.saveTax(
+                tax,
+                widget.invoice != null ? widget.invoice.id : invoice.id,
+              );
+            },
+          );
+        }
         Navigator.of(context).pop();
       },
       child: Text('Save'),
@@ -373,6 +410,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     CompanyView companyView,
     PdfView pdfView,
     PhotoView photoView,
+    TaxView taxView,
   ) {
     return Column(
       children: [
@@ -406,6 +444,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
         _buildItems(
           itemView,
           invoiceView,
+          taxView,
         ),
         ItemWidget(
           itemFormKey: _itemFormKey,
@@ -419,7 +458,9 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
           invoiceView.subTotal == 0 ? '0' : invoiceView.subTotal.toString(),
         ),
         DiscountWidget(),
-        TaxWidget(),
+        TaxWidget(
+          invoice: widget.invoice,
+        ),
         buildRow(
           'Total',
           invoiceView.total != null ? invoiceView.total.toString() : '0',
@@ -443,6 +484,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
   Widget _buildItems(
     ItemView itemView,
     InvoiceView invoiceView,
+    TaxView taxView,
   ) {
     return Container(
       child: invoiceView.itemsOfInvoice == null
@@ -462,6 +504,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                       invoiceView.setSubTotal =
                           invoiceView.subTotal - currentItem.amount;
                       invoiceView.updateDifference();
+                      taxView.updateTaxDifference(invoiceView);
                       invoiceView.setTotal =
                           invoiceView.subTotal - invoiceView.difference;
                     });
@@ -483,6 +526,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                     ),
                   ),
                   child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

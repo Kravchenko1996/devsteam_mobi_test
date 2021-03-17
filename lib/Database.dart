@@ -119,11 +119,15 @@ class DBProvider {
 
   Future<Tax> upsertTax(
     Tax tax,
-  ) async {
+      int invoiceId,
+      ) async {
     final db = await database;
     if (tax.id == null) {
       tax.id = await db.insert("Taxes", tax.toMap());
     } else {
+      if (tax.invoiceId == null) {
+        tax.invoiceId = invoiceId;
+      }
       await db.update(
         "Taxes",
         tax.toMap(),
@@ -132,6 +136,26 @@ class DBProvider {
       );
     }
     return tax;
+  }
+
+  getAllTaxesByInvoiceId(int invoiceId) async {
+    final db = await database;
+    var res = await db.query(
+      "Taxes",
+      where: "invoice_id = ?",
+      whereArgs: [invoiceId],
+    );
+    return res.isNotEmpty ? res.map((e) => Tax.fromMap(e)).toList() : null;
+  }
+
+  getTaxByInvoiceId(int invoiceId) async {
+    final db = await database;
+    var res = await db.query(
+      "Taxes",
+      where: "invoice_id = ?",
+      whereArgs: [invoiceId],
+    );
+    return res.isNotEmpty ? Tax.fromMap(res.first) : null;
   }
 
   // CLIENTS

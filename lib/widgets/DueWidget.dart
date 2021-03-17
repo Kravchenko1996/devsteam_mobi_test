@@ -38,6 +38,7 @@ class DueWidget extends StatelessWidget {
                       itemCount: invoiceView.dueOptions.length,
                       itemBuilder: (BuildContext context, int index) {
                         return GestureDetector(
+                          behavior: HitTestBehavior.translucent,
                           onTap: () async {
                             invoiceView.selectDueOption(
                               invoiceView.dueOptions[index],

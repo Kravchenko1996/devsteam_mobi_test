@@ -47,6 +47,7 @@ class _AvatarPickerWidgetState extends State<AvatarPickerWidget> {
           padding: EdgeInsets.only(top: 15),
           child: Center(
             child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
               onTap: () {
                 _showPicker(context, companyView);
               },

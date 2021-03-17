@@ -5,16 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class PaymentModal extends StatefulWidget {
-  final GlobalKey paymentFormKey;
-  final TextEditingController paymentMethod;
-  final TextEditingController paymentAmount;
   final bool toCreate;
 
   const PaymentModal({
     Key key,
-    this.paymentFormKey,
-    this.paymentMethod,
-    this.paymentAmount,
     this.toCreate,
   }) : super(key: key);
 
@@ -37,8 +31,7 @@ class _PaymentModalState extends State<PaymentModal> {
       );
       paymentView.countPaymentsSum(paymentView.paymentsOfInvoice);
       // Set "Other" as a default paymentMethod
-      paymentView.paymentMethod.text =
-          paymentView.paymentMethods.last;
+      paymentView.paymentMethod.text = paymentView.paymentMethods.last;
       // Always show the rest in new payment
       // ToDo select all text while adding new payment
       paymentView.paymentAmount.text =
@@ -83,6 +76,7 @@ class _PaymentModalState extends State<PaymentModal> {
                             itemCount: paymentView.paymentMethods.length,
                             itemBuilder: (BuildContext context, int index) {
                               return GestureDetector(
+                                behavior: HitTestBehavior.translucent,
                                 onTap: () {
                                   setState(() {
                                     paymentView.paymentMethod.text =
@@ -116,28 +110,23 @@ class _PaymentModalState extends State<PaymentModal> {
                                 onPressed: () {
                                   if (widget.toCreate) {
                                     Payment newPayment = Payment(
-                                      method: paymentView
-                                          .paymentMethod.text,
+                                      method: paymentView.paymentMethod.text,
                                       amount: double.parse(
-                                        paymentView
-                                            .paymentAmount.text,
+                                        paymentView.paymentAmount.text,
                                       ),
                                     );
                                     paymentView.savePayment(
                                       newPayment,
                                       null,
                                     );
-                                    paymentView.paymentsOfInvoice.add(
-                                      newPayment,
-                                    );
+                                    paymentView.paymentsOfInvoice
+                                        .add(newPayment);
                                   } else {
                                     Payment editedPayment = Payment(
                                       id: paymentView.payment.id,
-                                      method: paymentView
-                                          .paymentMethod.text,
+                                      method: paymentView.paymentMethod.text,
                                       amount: double.parse(
-                                        paymentView
-                                            .paymentAmount.text,
+                                        paymentView.paymentAmount.text,
                                       ),
                                     );
                                     int index = paymentView.paymentsOfInvoice
@@ -184,14 +173,12 @@ class _PaymentModalState extends State<PaymentModal> {
                                   width: 50,
                                   child: TextFormField(
                                     autofocus: true,
-                                    controller:
-                                        paymentView.paymentAmount,
+                                    controller: paymentView.paymentAmount,
                                     keyboardType: TextInputType.number,
                                     decoration: InputDecoration(
                                       hintText: '0.00',
                                     ),
-                                    onTap: () => paymentView
-                                        .paymentAmount
+                                    onTap: () => paymentView.paymentAmount
                                         .selection = TextSelection(
                                       baseOffset: 0,
                                       extentOffset: paymentView

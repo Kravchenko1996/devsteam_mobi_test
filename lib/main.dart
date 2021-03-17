@@ -6,6 +6,7 @@ import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/item.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
 import 'package:devsteam_mobi_test/viewmodels/photo.dart';
+import 'package:devsteam_mobi_test/viewmodels/tax.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -42,6 +43,9 @@ void initApp() {
         ),
         ChangeNotifierProvider<PdfView>(
           create: (_) => PdfView(),
+        ),
+        ChangeNotifierProvider<TaxView>(
+          create: (_) => TaxView(),
         ),
       ],
       child: MyApp(),

@@ -1,6 +1,7 @@
 import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/item.dart';
+import 'package:devsteam_mobi_test/viewmodels/tax.dart';
 import 'package:devsteam_mobi_test/widgets/Item/ItemForm.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -60,6 +61,7 @@ class ItemScreen extends StatelessWidget {
                         );
                         invoiceView.itemsOfInvoice.add(newItem);
                         invoiceView.countSubtotal(invoiceView.itemsOfInvoice);
+                        context.read<TaxView>().updateTaxDifference(invoiceView);
                       } else {
                         Item editedItem = Item(
                           id: itemView.item.id,
@@ -78,6 +80,7 @@ class ItemScreen extends StatelessWidget {
                         invoiceView.countSubtotal(invoiceView.itemsOfInvoice);
                       }
                       invoiceView.updateDifference();
+                      context.read<TaxView>().updateTaxDifference(invoiceView);
                       invoiceView.setTotal =
                           invoiceView.subTotal - invoiceView.difference;
                       Navigator.of(context).pop();

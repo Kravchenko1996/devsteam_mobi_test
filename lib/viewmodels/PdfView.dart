@@ -397,6 +397,7 @@ class PdfView with ChangeNotifier {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
+                  behavior: HitTestBehavior.translucent,
                   child: Column(
                     children: [
                       Icon(MdiIcons.send),
@@ -441,6 +442,7 @@ class PdfView with ChangeNotifier {
                   },
                 ),
                 GestureDetector(
+                  behavior: HitTestBehavior.translucent,
                   child: Column(
                     children: [
                       Icon(
@@ -461,6 +463,7 @@ class PdfView with ChangeNotifier {
                   ),
                 ),
                 GestureDetector(
+                  behavior: HitTestBehavior.translucent,
                   child: Column(
                     children: [Icon(MdiIcons.creditCard), Text('Mark paid')],
                   ),
@@ -481,6 +484,7 @@ class PdfView with ChangeNotifier {
                   ),
                 ),
                 GestureDetector(
+                  behavior: HitTestBehavior.translucent,
                   child: Column(
                     children: [
                       Icon(MdiIcons.printer),

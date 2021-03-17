@@ -54,6 +54,7 @@ class _AllClientsWidgetState extends State<AllClientsWidget> {
                   horizontal: 15,
                 ),
                 child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

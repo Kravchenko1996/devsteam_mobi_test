@@ -109,6 +109,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     ),
                   ),
                   child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
                     onTap: () async {
                       paymentView.selectPaymentFromList(currentPayment);
                       paymentView.paymentMethod.text = currentPayment.method;

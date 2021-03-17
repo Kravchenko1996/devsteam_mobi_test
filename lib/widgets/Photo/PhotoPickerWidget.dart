@@ -55,6 +55,7 @@ class _PhotoPickerWidgetState extends State<PhotoPickerWidget> {
         return Container(
           child: Center(
             child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
               onTap: () {
                 _showPicker(context, photoView);
               },
