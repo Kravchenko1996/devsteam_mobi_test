@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class DiscountForm extends StatelessWidget {
-  final GlobalKey discountFormKey;
+  final GlobalKey<FormState> discountFormKey;
   final TextEditingController invoiceDiscount;
   final TextEditingController invoiceDifference;
 
@@ -64,7 +64,8 @@ class DiscountForm extends StatelessWidget {
                         ),
                         prefixIconConstraints: BoxConstraints(minHeight: 10),
                         border: InputBorder.none,
-                        hintText: '0.00%',
+                        hintText: '0.00',
+                        suffix: Text('%'),
                       ),
                       textAlign: TextAlign.end,
                       controller: invoiceDiscount,

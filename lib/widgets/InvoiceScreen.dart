@@ -235,23 +235,18 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                                             ],
                                           ),
                                           body: SafeArea(
-                                            child: Container(
-                                              margin: EdgeInsets.symmetric(
-                                                horizontal: 15,
-                                              ),
-                                              child: SingleChildScrollView(
-                                                physics: ScrollPhysics(),
-                                                child: _buildBody(
-                                                  itemView,
-                                                  invoiceView,
-                                                  paymentView,
-                                                  emailCredentials,
-                                                  clientView,
-                                                  companyView,
-                                                  pdfView,
-                                                  photoView,
-                                                  taxView,
-                                                ),
+                                            child: SingleChildScrollView(
+                                              physics: ScrollPhysics(),
+                                              child: _buildBody(
+                                                itemView,
+                                                invoiceView,
+                                                paymentView,
+                                                emailCredentials,
+                                                clientView,
+                                                companyView,
+                                                pdfView,
+                                                photoView,
+                                                taxView,
                                               ),
                                             ),
                                           ),
@@ -412,72 +407,87 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
     PhotoView photoView,
     TaxView taxView,
   ) {
-    return Column(
-      children: [
-        pdfView.buildToolBar(
-          widget.invoice,
-          emailCredentials,
-          clientView,
-          companyView,
-          _clientNameController,
-          _clientEmailController,
-          _clientFormKey,
-          context,
-          shareWidget,
-          invoiceView,
-          paymentView,
-          photoView,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            DatePickerWidget(),
-            DueWidget(),
-          ],
-        ),
-        ClientWidget(
-          invoice: widget.invoice,
-          clientFormKey: _clientFormKey,
-          clientName: _clientNameController,
-          clientEmail: _clientEmailController,
-        ),
-        _buildItems(
-          itemView,
-          invoiceView,
-          taxView,
-        ),
-        ItemWidget(
-          itemFormKey: _itemFormKey,
-          itemTitle: _itemTitleController,
-          itemPrice: _itemPriceController,
-          itemQuantity: _itemQuantityController,
-          itemAmount: _itemAmountController,
-        ),
-        buildRow(
-          'Subtotal',
-          invoiceView.subTotal == 0 ? '0' : invoiceView.subTotal.toString(),
-        ),
-        DiscountWidget(),
-        TaxWidget(
-          invoice: widget.invoice,
-        ),
-        buildRow(
-          'Total',
-          invoiceView.total != null ? invoiceView.total.toString() : '0',
-        ),
-        PaidWidget(),
-        buildRow(
-          'Balance due',
-          (invoiceView.total - paymentView.paymentsSum).toString(),
-        ),
-        CompanyWidget(),
-        PhotoWidget(),
-        SignatureWidget(),
-        CommentWidget(
-          commentFormKey: _commentFormKey,
-          comment: _commentController,
-        ),
-      ],
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 15,
+      ),
+      child: Column(
+        children: [
+          pdfView.buildToolBar(
+            widget.invoice,
+            emailCredentials,
+            clientView,
+            companyView,
+            _clientNameController,
+            _clientEmailController,
+            _clientFormKey,
+            context,
+            shareWidget,
+            invoiceView,
+            paymentView,
+            photoView,
+          ),
+          Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              DatePickerWidget(),
+              DueWidget(),
+            ],
+          ),
+          Divider(),
+          ClientWidget(
+            invoice: widget.invoice,
+            clientFormKey: _clientFormKey,
+            clientName: _clientNameController,
+            clientEmail: _clientEmailController,
+          ),
+          Divider(),
+          _buildItems(
+            itemView,
+            invoiceView,
+            taxView,
+          ),
+          ItemWidget(
+            itemFormKey: _itemFormKey,
+            itemTitle: _itemTitleController,
+            itemPrice: _itemPriceController,
+            itemQuantity: _itemQuantityController,
+            itemAmount: _itemAmountController,
+            invoice: widget.invoice,
+          ),
+          buildRow(
+            'Subtotal',
+            invoiceView.subTotal == 0 ? '0' : invoiceView.subTotal.toString(),
+          ),
+          DiscountWidget(),
+          TaxWidget(
+            invoice: widget.invoice,
+          ),
+          buildRow(
+            'Total',
+            invoiceView.total != null
+                ? invoiceView.total.toStringAsFixed(2)
+                : '0',
+          ),
+          PaidWidget(),
+          buildRow(
+            'Balance due',
+            (invoiceView.total - paymentView.paymentsSum).toStringAsFixed(2),
+          ),
+          Divider(),
+          CompanyWidget(),
+          Divider(),
+          PhotoWidget(),
+          Divider(),
+          SignatureWidget(),
+          Divider(),
+          CommentWidget(
+            commentFormKey: _commentFormKey,
+            comment: _commentController,
+          ),
+        ],
+      ),
     );
   }
 
@@ -501,12 +511,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                     setState(() {
                       invoiceView.itemsOfInvoice.removeAt(index);
                       itemView.deleteItem(currentItem.id);
-                      invoiceView.setSubTotal =
-                          invoiceView.subTotal - currentItem.amount;
+                      invoiceView.countSubtotal(invoiceView.itemsOfInvoice);
                       invoiceView.updateDifference();
                       taxView.updateTaxDifference(invoiceView);
-                      invoiceView.setTotal =
-                          invoiceView.subTotal - invoiceView.difference;
+                      invoiceView.countTotal(invoiceView.itemsOfInvoice);
                     });
                     Scaffold.of(context).showSnackBar(
                       SnackBar(
@@ -536,8 +544,10 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                             Text(currentItem.title),
                             Row(
                               children: [
-                                Text('${currentItem.quantity.toString()}'
-                                    ' x ₴${currentItem.price.toString()}')
+                                Text(
+                                  '${currentItem.quantity.toString()}'
+                                  ' x ₴${currentItem.price.toString()}',
+                                )
                               ],
                             ),
                           ],
@@ -563,7 +573,7 @@ class _InvoiceScreenState extends State<InvoiceScreen> {
                               itemPrice: _itemPriceController,
                               itemQuantity: _itemQuantityController,
                               itemAmount: _itemAmountController,
-                              toCreate: false,
+                              invoice: widget.invoice,
                             );
                           },
                         ),

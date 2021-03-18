@@ -5,6 +5,7 @@ class Tax {
   String type;
   double amount;
   int included;
+  int itemId;
 
   Tax({
     this.id,
@@ -13,6 +14,7 @@ class Tax {
     this.type,
     this.amount,
     this.included,
+    this.itemId,
   });
 
   factory Tax.fromMap(Map<String, dynamic> json) => Tax(
@@ -22,6 +24,7 @@ class Tax {
         type: json['type'],
         amount: json['amount'],
         included: json['included'],
+        itemId: json['item_id'],
       );
 
   Map<String, dynamic> toMap() => {
@@ -31,5 +34,6 @@ class Tax {
         'type': type,
         'amount': amount,
         'included': included,
+        'item_id': itemId,
       };
 }

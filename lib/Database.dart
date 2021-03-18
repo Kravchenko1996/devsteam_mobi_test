@@ -81,6 +81,7 @@ class DBProvider {
             quantity REAL NOT NULL,
             amount REAL NOT NULL,
             invoice_id INTEGER,
+            taxable INTEGER,
             FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION     
       )""");
@@ -109,7 +110,10 @@ class DBProvider {
             amount REAL,
             included INTEGER,
             invoice_id INTEGER,
+            item_id INTEGER,
             FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
+              ON DELETE NO ACTION ON UPDATE NO ACTION 
+            FOREIGN KEY (item_id) REFERENCES Items (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION  
       )""");
     });
@@ -138,22 +142,22 @@ class DBProvider {
     return tax;
   }
 
-  getAllTaxesByInvoiceId(int invoiceId) async {
-    final db = await database;
-    var res = await db.query(
-      "Taxes",
-      where: "invoice_id = ?",
-      whereArgs: [invoiceId],
-    );
-    return res.isNotEmpty ? res.map((e) => Tax.fromMap(e)).toList() : null;
-  }
-
   getTaxByInvoiceId(int invoiceId) async {
     final db = await database;
     var res = await db.query(
       "Taxes",
       where: "invoice_id = ?",
       whereArgs: [invoiceId],
+    );
+    return res.isNotEmpty ? Tax.fromMap(res.first) : null;
+  }
+
+  getTaxByItemId(int itemId) async {
+    final db = await database;
+    var res = await db.query(
+      "Taxes",
+      where: "item_id = ?",
+      whereArgs: [itemId],
     );
     return res.isNotEmpty ? Tax.fromMap(res.first) : null;
   }

@@ -1,4 +1,5 @@
 import 'package:devsteam_mobi_test/Database.dart';
+import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/models/Tax.dart';
 import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:flutter/material.dart';
@@ -41,12 +42,16 @@ class TaxView with ChangeNotifier {
     int invoiceId, [
     InvoiceView invoiceView,
   ]) async {
-    var res = await DBProvider.db.upsertTax(
-      tax,
-      invoiceId,
-    );
-    _tax = res;
-    updateTaxDifference(invoiceView);
+    if (tax.type != 'None') {
+      var res = await DBProvider.db.upsertTax(
+        tax,
+        invoiceId,
+      );
+      _tax = res;
+      updateTaxDifference(invoiceView);
+    } else {
+      _tax = null;
+    }
     notifyListeners();
   }
 
@@ -58,18 +63,51 @@ class TaxView with ChangeNotifier {
     if (res != null) {
       _tax = res;
       updateTaxDifference(invoiceView);
-      notifyListeners();
     }
+    notifyListeners();
+  }
+
+  void getTaxByItemId(
+    int itemId, [
+    InvoiceView invoiceView,
+  ]) async {
+    Tax res = await DBProvider.db.getTaxByItemId(itemId);
+    if (res != null) {
+      _tax = res;
+      // updateTaxDifference(invoiceView);
+    }
+    notifyListeners();
   }
 
   void updateTaxDifference(InvoiceView invoiceView) async {
-    print(invoiceView.subTotal);
-    print(_tax.amount);
-    if (_included) {
-      _taxDifference = invoiceView.subTotal -
-          (invoiceView.subTotal * 100) / (100 + _tax.amount ?? 0);
-    } else {
-      _taxDifference = (invoiceView.subTotal * _tax.amount ?? 0) / 100;
+    if (invoiceView != null && invoiceView.subTotal != null) {
+      List<Item> taxableItems = [];
+      invoiceView.itemsOfInvoice.forEach(
+        (Item item) {
+          if (item.taxable == 1) {
+            taxableItems.add(item);
+          }
+        },
+      );
+      double taxableItemsAmount = 0;
+      taxableItems.forEach(
+          (Item item) {
+            taxableItemsAmount += item.amount;
+          }
+      );
+      if (_included) {
+        _taxDifference = taxableItemsAmount -
+            (taxableItemsAmount * 100) / (100 + _tax.amount ?? 0);
+        invoiceView.countTotal(invoiceView.itemsOfInvoice);
+      } else {
+        _taxDifference = (taxableItemsAmount * _tax.amount ?? 0) / 100;
+        updateTotalWithTax(invoiceView);
+      }
     }
+  }
+
+  void updateTotalWithTax(InvoiceView invoiceView) async {
+    invoiceView.countTotal(invoiceView.itemsOfInvoice);
+    invoiceView.setTotal = invoiceView.total + _taxDifference;
   }
 }

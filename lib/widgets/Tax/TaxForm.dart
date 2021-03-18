@@ -36,6 +36,7 @@ class _TaxFormState extends State<TaxForm> {
     if (widget.taxType.text.isEmpty) {
       widget.taxType.text = taxView.taxTypes.first;
     }
+    widget.taxAmount.text = '0.0';
     if (taxView.tax != null) {
       widget.taxName.text = taxView.tax.name;
       widget.taxType.text = taxView.tax.type;
@@ -102,20 +103,21 @@ class _TaxFormState extends State<TaxForm> {
                       RaisedButton(
                         child: Text('Save'),
                         onPressed: () {
-                          Tax newTax = Tax(
+                          Tax tax = Tax(
                             id: taxView.tax != null ? taxView.tax.id : null,
                             name: widget.taxName.text,
                             amount: double.parse(widget.taxAmount.text),
                             type: widget.taxType.text,
-                            included: 1,
+                            included: taxView.included ? 1 : 0,
+                            itemId: null,
                           );
                           taxView.saveTax(
-                            newTax,
+                            tax,
                             widget.invoice != null ? widget.invoice.id : null,
                             context.read<InvoiceView>(),
                           );
-                          if (newTax.id == null) {
-                            taxView.taxesOfInvoice.add(newTax);
+                          if (tax.id == null) {
+                            taxView.taxesOfInvoice.add(tax);
                           }
                           Navigator.of(context).popUntil(
                             (route) => route.settings.name == 'InvoiceScreen',
@@ -175,6 +177,11 @@ class _TaxFormState extends State<TaxForm> {
                                   keyboardType: TextInputType.number,
                                   decoration: InputDecoration(
                                     hintText: '0.00',
+                                    border: InputBorder.none,
+                                    suffixIcon: Text('%'),
+                                    suffixIconConstraints: BoxConstraints(
+                                      minWidth: 10,
+                                    ),
                                   ),
                                   onTap: () => widget.taxAmount.selection =
                                       TextSelection(
@@ -187,24 +194,26 @@ class _TaxFormState extends State<TaxForm> {
                             ],
                           ),
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Included in Item Price',
-                            ),
-                            Switch(
-                              value: taxView.included,
-                              onChanged: (value){
-                                setState(() {
-                                  taxView.setIncluded = !taxView.included;
-                                  print(taxView.included);
-                                });
-                              },
-                              activeTrackColor: Colors.lightBlueAccent,
-                              activeColor: Colors.blueAccent,
-                            ),
-                          ],
+                      ],
+                    ),
+                  ),
+                  Visibility(
+                    visible: widget.taxType.text != 'None',
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Included in Item Price',
+                        ),
+                        Switch(
+                          value: taxView.included,
+                          onChanged: (value) {
+                            setState(() {
+                              taxView.setIncluded = !taxView.included;
+                            });
+                          },
+                          activeTrackColor: Colors.lightBlueAccent,
+                          activeColor: Colors.blueAccent,
                         ),
                       ],
                     ),

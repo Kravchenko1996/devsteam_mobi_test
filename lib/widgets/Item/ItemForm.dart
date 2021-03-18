@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class ItemForm extends StatefulWidget {
+class ItemForm extends StatelessWidget {
   final GlobalKey itemFormKey;
   final TextEditingController itemTitle;
   final TextEditingController itemPrice;
@@ -17,19 +17,9 @@ class ItemForm extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ItemFormState createState() => _ItemFormState();
-}
-
-class _ItemFormState extends State<ItemForm> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Form(
-      key: widget.itemFormKey,
+      key: itemFormKey,
       child: Column(
         children: [
           Container(
@@ -39,7 +29,7 @@ class _ItemFormState extends State<ItemForm> {
                 border: InputBorder.none,
                 hintText: 'Item title',
               ),
-              controller: widget.itemTitle,
+              controller: itemTitle,
               validator: (val) {
                 if (val.isEmpty) {
                   return 'Enter something please!';
@@ -48,6 +38,7 @@ class _ItemFormState extends State<ItemForm> {
               },
             ),
           ),
+          Divider(),
           TextFormField(
             decoration: InputDecoration(
               prefixIcon: Text(
@@ -61,13 +52,12 @@ class _ItemFormState extends State<ItemForm> {
               hintText: '0.00',
             ),
             textAlign: TextAlign.end,
-            controller: widget.itemPrice,
+            controller: itemPrice,
             keyboardType: TextInputType.number,
             onChanged: (_) => _countAmount(),
-            onTap: () => _selectAllText(widget.itemPrice),
+            onTap: () => _selectAllText(itemPrice),
           ),
           TextFormField(
-            autofocus: true,
             decoration: InputDecoration(
               prefixIcon: Text(
                 'Quantity',
@@ -80,10 +70,10 @@ class _ItemFormState extends State<ItemForm> {
               hintText: '0',
             ),
             textAlign: TextAlign.end,
-            controller: widget.itemQuantity,
+            controller: itemQuantity,
             keyboardType: TextInputType.number,
             onChanged: (_) => _countAmount(),
-            onTap: () => _selectAllText(widget.itemQuantity),
+            onTap: () => _selectAllText(itemQuantity),
           ),
           TextFormField(
             readOnly: true,
@@ -96,11 +86,10 @@ class _ItemFormState extends State<ItemForm> {
               ),
               prefixIconConstraints: BoxConstraints(minHeight: 10),
               border: InputBorder.none,
-              hintText:
-                  '${widget.itemAmount.text.isNotEmpty ? widget.itemAmount.text : '0'}',
+              hintText: itemAmount.text.isNotEmpty ? itemAmount.text : '0',
             ),
             textAlign: TextAlign.end,
-            controller: widget.itemAmount,
+            controller: itemAmount,
           ),
         ],
       ),
@@ -115,9 +104,9 @@ class _ItemFormState extends State<ItemForm> {
   }
 
   void _countAmount() {
-    double price = double.parse(widget.itemPrice.text);
-    double quantity = double.parse(widget.itemQuantity.text);
+    double price = double.parse(itemPrice.text);
+    double quantity = double.parse(itemQuantity.text);
     double amount = (price * quantity);
-    widget.itemAmount.text = amount.toString();
+    itemAmount.text = amount.toString();
   }
 }

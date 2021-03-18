@@ -56,15 +56,15 @@ void initApp() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Remove focus from all fields by tap outside
+    //ToDo Remove focus from all fields by tap outside
     return Listener(
-      onPointerDown: (_) {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus &&
-            currentFocus.focusedChild != null) {
-          currentFocus.focusedChild.unfocus();
-        }
-      },
+      // onPointerDown: (_) {
+      //   FocusScopeNode currentFocus = FocusScope.of(context);
+      //   if (!currentFocus.hasPrimaryFocus &&
+      //       currentFocus.focusedChild != null) {
+      //     currentFocus.focusedChild.unfocus();
+      //   }
+      // },
       child: MaterialApp(
         title: 'Devsteam.mobi',
         debugShowCheckedModeBanner: false,

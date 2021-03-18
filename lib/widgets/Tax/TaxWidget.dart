@@ -57,7 +57,11 @@ class _TaxWidgetState extends State<TaxWidget> {
           );
         },
         child: buildRow(
-          taxView.tax != null ? 'Tax (${taxView.tax.amount}%)' : '0',
+          taxView.tax != null
+              ? taxView.tax.type == 'Per item'
+                  ? 'Tax in items'
+                  : 'Tax (${taxView.tax.amount}%)'
+              : 'Tax',
           taxView.tax != null ? taxView.taxDifference.toStringAsFixed(2) : '0',
         ),
       );

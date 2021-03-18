@@ -5,6 +5,7 @@ class Item {
   final double price;
   final double quantity;
   final double amount;
+  int taxable;
 
   Item({
     this.id,
@@ -13,6 +14,7 @@ class Item {
     this.price,
     this.quantity,
     this.amount,
+    this.taxable,
   });
 
   factory Item.fromMap(Map<String, dynamic> json) => Item(
@@ -22,6 +24,7 @@ class Item {
         price: json['price'],
         quantity: json['quantity'],
         amount: json['amount'],
+        taxable: json['taxable'],
       );
 
   Map<String, dynamic> toMap() => {
@@ -31,5 +34,6 @@ class Item {
         'price': price,
         'quantity': quantity,
         'amount': amount,
+        'taxable': taxable,
       };
 }

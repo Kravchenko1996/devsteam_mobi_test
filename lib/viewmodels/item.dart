@@ -7,6 +7,14 @@ class ItemView with ChangeNotifier {
 
   Item get item => _item;
 
+  set setItem(Item value) => _item = value;
+
+  bool _taxable = false;
+
+  bool get taxable => _taxable;
+
+  set setTaxable(bool value) => _taxable = value;
+
   void saveItem(
     Item item,
     int invoiceId,
@@ -26,5 +34,11 @@ class ItemView with ChangeNotifier {
 
   void deleteItem(int itemId) async {
     await DBProvider.db.deleteItem(itemId);
+  }
+
+  void getItemById(int itemId) async {
+    Item res = await DBProvider.db.getItemById(itemId);
+    _item = res;
+    notifyListeners();
   }
 }

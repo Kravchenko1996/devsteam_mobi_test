@@ -9,7 +9,7 @@ class DiscountWidget extends StatefulWidget {
 }
 
 class _DiscountWidgetState extends State<DiscountWidget> {
-  final _discountFormKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _discountFormKey = GlobalKey<FormState>();
   final TextEditingController _discountController = TextEditingController();
   final TextEditingController _differenceController = TextEditingController();
 
