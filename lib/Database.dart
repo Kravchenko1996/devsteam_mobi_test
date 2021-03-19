@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:devsteam_mobi_test/models/Client.dart';
 import 'package:devsteam_mobi_test/models/Company.dart';
+import 'package:devsteam_mobi_test/models/Discount.dart';
 import 'package:devsteam_mobi_test/models/Item.dart';
 import 'package:devsteam_mobi_test/models/Payment.dart';
 import 'package:devsteam_mobi_test/models/Photo.dart';
@@ -82,6 +83,7 @@ class DBProvider {
             amount REAL NOT NULL,
             invoice_id INTEGER,
             taxable INTEGER,
+            discountable INTEGER,
             FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION     
       )""");
@@ -112,22 +114,74 @@ class DBProvider {
             invoice_id INTEGER,
             item_id INTEGER,
             FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
-              ON DELETE NO ACTION ON UPDATE NO ACTION 
+              ON DELETE NO ACTION ON UPDATE NO ACTION
             FOREIGN KEY (item_id) REFERENCES Items (id)
               ON DELETE NO ACTION ON UPDATE NO ACTION  
       )""");
+      await db.execute("""
+          CREATE TABLE Discounts (
+            id INTEGER PRIMARY KEY,
+            percentage REAL,
+            amount REAL,
+            item_id INTEGER,
+            invoice_id INTEGER,
+            is_percentage_last INTEGER,
+            FOREIGN KEY (item_id) REFERENCES Items (id)
+              ON DELETE NO ACTION ON UPDATE NO ACTION
+            FOREIGN KEY (invoice_id) REFERENCES Invoices (id)
+              ON DELETE NO ACTION ON UPDATE NO ACTION  
+      )""");
     });
+  }
+
+  // DISCOUNTS
+
+  Future<Discount> upsertDiscount(
+    Discount discount,
+    int invoiceId,
+  ) async {
+    final db = await database;
+    if (discount.id == null) {
+      discount.id = await db.insert(
+        "Discounts",
+        discount.toMap(),
+      );
+    } else {
+      if (discount.invoiceId == null) {
+        discount.invoiceId = invoiceId;
+      }
+      await db.update(
+        "Discounts",
+        discount.toMap(),
+        where: "id = ?",
+        whereArgs: [discount.id],
+      );
+    }
+    return discount;
+  }
+
+  getDiscountByItemId(int itemId) async {
+    final db = await database;
+    var res = await db.query(
+      "Discounts",
+      where: "item_id = ?",
+      whereArgs: [itemId],
+    );
+    return res.isNotEmpty ? Discount.fromMap(res.first) : null;
   }
 
   // TAXES
 
   Future<Tax> upsertTax(
     Tax tax,
-      int invoiceId,
-      ) async {
+    int invoiceId,
+  ) async {
     final db = await database;
     if (tax.id == null) {
-      tax.id = await db.insert("Taxes", tax.toMap());
+      tax.id = await db.insert(
+        "Taxes",
+        tax.toMap(),
+      );
     } else {
       if (tax.invoiceId == null) {
         tax.invoiceId = invoiceId;
@@ -170,7 +224,10 @@ class DBProvider {
   ) async {
     final db = await database;
     if (clientId == null) {
-      client.id = await db.insert("Clients", client.toMap());
+      client.id = await db.insert(
+        "Clients",
+        client.toMap(),
+      );
     } else {
       client.id = clientId;
       await db.update(
@@ -235,7 +292,10 @@ class DBProvider {
   ) async {
     final db = await database;
     if (invoice.id == null) {
-      invoice.id = await db.insert("invoices", invoice.toMap());
+      invoice.id = await db.insert(
+        "invoices",
+        invoice.toMap(),
+      );
     } else {
       invoice.clientId = clientId;
       invoice.discount = discount;
@@ -341,7 +401,10 @@ class DBProvider {
   ) async {
     final db = await database;
     if (payment.id == null) {
-      payment.id = await db.insert("Payments", payment.toMap());
+      payment.id = await db.insert(
+        "Payments",
+        payment.toMap(),
+      );
     } else {
       if (payment.invoiceId == null) {
         payment.invoiceId = invoiceId;
@@ -388,7 +451,10 @@ class DBProvider {
   Future<Photo> upsertPhoto(Photo photo) async {
     final db = await database;
     if (photo.id == null) {
-      photo.id = await db.insert("Photos", photo.toMap());
+      photo.id = await db.insert(
+        "Photos",
+        photo.toMap(),
+      );
     }
     return photo;
   }
@@ -417,7 +483,10 @@ class DBProvider {
   Future<Company> upsertCompany(Company company) async {
     final db = await database;
     if (company.id == null) {
-      company.id = await db.insert("Company", company.toMap());
+      company.id = await db.insert(
+        "Company",
+        company.toMap(),
+      );
     } else {
       await db.update(
         "Company",

@@ -9,13 +9,44 @@ class ItemView with ChangeNotifier {
 
   set setItem(Item value) => _item = value;
 
+  final GlobalKey<FormState> _itemFormKey = GlobalKey<FormState>();
+
+  GlobalKey<FormState> get itemFormKey => _itemFormKey;
+
   bool _taxable = false;
 
   bool get taxable => _taxable;
 
   set setTaxable(bool value) => _taxable = value;
 
-  void saveItem(
+  bool _discountable = false;
+
+  bool get discountable => _discountable;
+
+  set setDiscountable(bool value) => _discountable = value;
+
+  bool _btnEnabled = false;
+
+  bool get btnEnabled => _btnEnabled;
+
+  set setBtnEnabled(bool value) => _btnEnabled = value;
+
+  void enableBtn() {
+    _btnEnabled = _itemFormKey.currentState.validate();
+    notifyListeners();
+  }
+
+  void switchTaxable() {
+    _taxable = !_taxable;
+    notifyListeners();
+  }
+
+  void switchDiscount() {
+    _discountable = !_discountable;
+    notifyListeners();
+  }
+
+  Future<Item> saveItem(
     Item item,
     int invoiceId,
   ) async {
@@ -23,8 +54,7 @@ class ItemView with ChangeNotifier {
       item,
       invoiceId,
     );
-    _item = res;
-    notifyListeners();
+    return res;
   }
 
   void selectItemFromList(Item selectedItem) {

@@ -95,12 +95,13 @@ class TaxView with ChangeNotifier {
             taxableItemsAmount += item.amount;
           }
       );
+      double taxAmount = _tax != null ? _tax.amount : 0;
       if (_included) {
         _taxDifference = taxableItemsAmount -
-            (taxableItemsAmount * 100) / (100 + _tax.amount ?? 0);
+            (taxableItemsAmount * 100) / (100 + taxAmount);
         invoiceView.countTotal(invoiceView.itemsOfInvoice);
       } else {
-        _taxDifference = (taxableItemsAmount * _tax.amount ?? 0) / 100;
+        _taxDifference = (taxableItemsAmount * taxAmount) / 100;
         updateTotalWithTax(invoiceView);
       }
     }

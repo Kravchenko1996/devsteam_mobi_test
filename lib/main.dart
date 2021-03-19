@@ -2,6 +2,7 @@ import 'package:devsteam_mobi_test/viewmodels/PdfView.dart';
 import 'package:devsteam_mobi_test/models/EmailCredentials.dart';
 import 'package:devsteam_mobi_test/viewmodels/client.dart';
 import 'package:devsteam_mobi_test/viewmodels/company.dart';
+import 'package:devsteam_mobi_test/viewmodels/discount.dart';
 import 'package:devsteam_mobi_test/viewmodels/invoice.dart';
 import 'package:devsteam_mobi_test/viewmodels/item.dart';
 import 'package:devsteam_mobi_test/viewmodels/payment.dart';
@@ -46,6 +47,9 @@ void initApp() {
         ),
         ChangeNotifierProvider<TaxView>(
           create: (_) => TaxView(),
+        ),
+        ChangeNotifierProvider<DiscountView>(
+          create: (_) => DiscountView(),
         ),
       ],
       child: MyApp(),
